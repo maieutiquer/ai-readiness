@@ -65,6 +65,7 @@ jobs:
       - run: npm run typecheck
 
   build:
+    # the resulting build is not used for anything, it's just for checking if the build is working
     needs: setup
     runs-on: ubuntu-latest
     steps:
