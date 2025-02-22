@@ -2,46 +2,73 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 22.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
-    - run: npm ci
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+      - run: npm ci
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
 
   format:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: npm run format:check
+      - uses: actions/checkout@v4
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run format:check
 
   lint:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: npm run lint
+      - uses: actions/checkout@v4
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run lint
 
   type-check:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: npm run check
+      - uses: actions/checkout@v4
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run check
 
   build:
-    needs: setup  # Run as soon as dependencies are installed
+    needs: setup
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - run: npm run build
+      - uses: actions/checkout@v4
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run build
