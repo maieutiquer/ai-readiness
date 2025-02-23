@@ -18,7 +18,8 @@
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.1",
@@ -58,6 +59,7 @@
     "@typescript-eslint/parser": "^8.1.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.0.1",
+    "husky": "^9.1.7",
     "postcss": "^8.4.39",
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
