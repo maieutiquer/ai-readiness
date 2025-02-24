@@ -22,8 +22,9 @@ import {
   TECHNICAL_EXPERTISE_LEVELS,
   MAIN_BUSINESS_CHALLENGES,
   PRIORITY_AREAS,
-} from "./constants";
-import { formSchema, type FormValues } from "./types";
+  formSchema,
+  type FormValues,
+} from "./formDefinitions";
 
 export function AssessmentForm() {
   const form = useForm<FormValues>({

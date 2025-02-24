@@ -1,3 +1,9 @@
+import { z } from "zod";
+
+// =========================================================
+// Constants
+// =========================================================
+
 export const COMPANY_SIZES = [
   "1-10 employees",
   "11-50 employees",
@@ -76,3 +82,22 @@ export const PRIORITY_AREAS = [
   "AI-powered product innovation",
   "Other",
 ] as const;
+
+// =========================================================
+// Types
+// =========================================================
+
+export const formSchema = z.object({
+  companySize: z.enum(COMPANY_SIZES),
+  industry: z.enum(INDUSTRIES),
+  techStackMaturity: z.enum(TECH_STACK_MATURITY_LEVELS),
+  dataAvailability: z.array(z.enum(DATA_AVAILABILITY_OPTIONS)),
+  budgetRange: z.enum(BUDGETS),
+  timelineExpectations: z.enum(TIMELINES),
+  technicalExpertiseLevel: z.enum(TECHNICAL_EXPERTISE_LEVELS),
+  previousAiExperience: z.boolean(),
+  mainBusinessChallenge: z.array(z.enum(MAIN_BUSINESS_CHALLENGES)),
+  priorityArea: z.array(z.enum(PRIORITY_AREAS)),
+});
+
+export type FormValues = z.infer<typeof formSchema>;
