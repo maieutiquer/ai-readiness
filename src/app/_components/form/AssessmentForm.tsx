@@ -22,27 +22,88 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 
-// Define form schema
+const COMPANY_SIZES = [
+  "1-10 employees",
+  "11-50 employees",
+  "51-200 employees",
+  "201-1,000 employees",
+  "1,001+ employees",
+] as const;
+const INDUSTRIES = [
+  "Healthcare",
+  "Finance & Banking",
+  "Retail & E-commerce",
+  "Manufacturing",
+  "Logistics & Supply Chain",
+  "Technology & Software",
+  "Government & Public Sector",
+  "Education",
+  "Energy & Utilities",
+  "Other",
+] as const;
+const TECH_STACK_MATURITY_LEVELS = [
+  "1 - No digital infrastructure (fully manual processes)",
+  "2 - Basic (Some cloud tools, no AI usage)",
+  "3 - Moderate (Using automation, but no AI models)",
+  "4 - Advanced (Some AI models in production)",
+  "5 - Highly mature (AI deeply integrated in operations)",
+] as const;
+const DATA_AVAILABILITY_OPTIONS = [
+  "We collect structured data (well-organized, databases, etc.)",
+  "We collect unstructured data (documents, images, videos, etc.)",
+  "We have real-time data streams (IoT, event-driven systems)",
+  "We rely on third-party data providers",
+  "We have little to no data collection",
+] as const;
+const BUDGETS = [
+  "Less than $10,000",
+  "$10,000 - $50,000",
+  "$50,000 - $100,000",
+  "$100,000 - $500,000",
+  "More than $500,000",
+] as const;
+const TIMELINES = [
+  "0-3 months (immediate implementation)",
+  "3-6 months",
+  "6-12 months",
+  "12+ months (long-term plan)",
+] as const;
+const TECHNICAL_EXPERTISE_LEVELS = [
+  "1 - No in-house tech expertise",
+  "2 - Some IT staff, but no AI/ML experience",
+  "3 - Software team with basic AI/ML knowledge",
+  "4 - AI specialists available, but limited experience",
+  "5 - Strong AI/ML team with advanced capabilities",
+] as const;
+const MAIN_BUSINESS_CHALLENGES = [
+  "Reducing operational costs",
+  "Increasing revenue and sales",
+  "Improving customer experience",
+  "Enhancing decision-making with AI insights",
+  "Optimizing supply chain and logistics",
+  "Automating repetitive tasks",
+  "Other",
+] as const;
+const PRIORITY_AREAS = [
+  "Data-driven decision-making",
+  "Process automation",
+  "Customer service automation (e.g., chatbots, voice assistants)",
+  "Predictive analytics (forecasting trends, risk assessment)",
+  "AI-powered product innovation",
+  "Other",
+] as const;
+
 export const formSchema = z.object({
-  company_size: z.enum(["Small (1-50)", "Medium (51-500)", "Large (500+)"]),
-  industry: z.enum(["Finance", "Healthcare", "Retail", "Technology", "Other"]),
-  tech_maturity: z.number().min(1).max(5),
-  data_availability: z.enum([
-    "None",
-    "Limited",
-    "Structured",
-    "Structured & Unstructured",
-  ]),
-  budget: z.enum(["< $50k", "$50k - $100k", "$100k - $500k", "$500k+"]),
-  timeline: z.enum(["< 3 months", "3-6 months", "6-12 months", "12+ months"]),
-  expertise_level: z.number().min(1).max(5),
-  ai_experience: z.boolean(),
-  priority_area: z.enum([
-    "Customer Service",
-    "Process Automation",
-    "Decision Support",
-    "Other",
-  ]),
+  companySize: z.enum(COMPANY_SIZES),
+  industry: z.enum(INDUSTRIES),
+  techStackMaturity: z.enum(TECH_STACK_MATURITY_LEVELS),
+  dataAvailability: z.array(z.enum(DATA_AVAILABILITY_OPTIONS)),
+  budgetRange: z.enum(BUDGETS),
+  timelineExpectations: z.enum(TIMELINES),
+  technicalExpertiseLevel: z.enum(TECHNICAL_EXPERTISE_LEVELS),
+  previousAiExperience: z.boolean(),
+  mainBusinessChallenge: z.array(z.enum(MAIN_BUSINESS_CHALLENGES)),
+  priorityArea: z.array(z.enum(PRIORITY_AREAS)),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,17 +111,6 @@ type FormValues = z.infer<typeof formSchema>;
 export function AssessmentForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      company_size: "Small (1-50)",
-      industry: "Technology",
-      tech_maturity: 1,
-      data_availability: "None",
-      budget: "< $50k",
-      timeline: "< 3 months",
-      expertise_level: 1,
-      ai_experience: false,
-      priority_area: "Customer Service",
-    },
   });
 
   const [aiRecommendations, setAiRecommendations] = useState<string | null>(
@@ -88,11 +138,11 @@ export function AssessmentForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="company_size"
+            name="companySize"
             render={({ field }) => (
               <>
                 <FormItem>
-                  <FormLabel>Company Size</FormLabel>
+                  <FormLabel>Company size</FormLabel>
                   <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
@@ -100,11 +150,11 @@ export function AssessmentForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Small (1-50)">Small (1-50)</SelectItem>
-                      <SelectItem value="Medium (51-500)">
-                        Medium (51-500)
-                      </SelectItem>
-                      <SelectItem value="Large (500+)">Large (500+)</SelectItem>
+                      {COMPANY_SIZES.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -123,11 +173,11 @@ export function AssessmentForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Finance">Finance</SelectItem>
-                          <SelectItem value="Healthcare">Healthcare</SelectItem>
-                          <SelectItem value="Retail">Retail</SelectItem>
-                          <SelectItem value="Technology">Technology</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          {INDUSTRIES.map((industry) => (
+                            <SelectItem key={industry} value={industry}>
+                              {industry}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -137,24 +187,25 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="tech_maturity"
+                  name="techStackMaturity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Technology Maturity</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select technology maturity" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4">4</SelectItem>
-                          <SelectItem value="5">5</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Current tech stack maturity (1-5)</FormLabel>
+                      <div>
+                        {TECH_STACK_MATURITY_LEVELS.map((value) => (
+                          <FormControl key={value}>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                value={value}
+                                checked={field.value === value}
+                                onChange={() => field.onChange(value)}
+                              />
+                              <label>{value}</label>
+                            </div>
+                          </FormControl>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -162,25 +213,32 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="data_availability"
+                  name="dataAvailability"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Data Availability</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select data availability" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="None">None</SelectItem>
-                          <SelectItem value="Limited">Limited</SelectItem>
-                          <SelectItem value="Structured">Structured</SelectItem>
-                          <SelectItem value="Structured & Unstructured">
-                            Structured & Unstructured
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Data availability</FormLabel>
+                      <div className="space-y-2">
+                        {DATA_AVAILABILITY_OPTIONS.map((option) => (
+                          <FormControl key={option}>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={field.value?.includes(option)}
+                                onChange={(e) => {
+                                  const updatedValue = e.target.checked
+                                    ? [...(field.value || []), option]
+                                    : field.value?.filter(
+                                        (val: string) => val !== option,
+                                      ) || [];
+                                  field.onChange(updatedValue);
+                                }}
+                                className="h-4 w-4"
+                              />
+                              <label>{option}</label>
+                            </div>
+                          </FormControl>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -188,10 +246,10 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="budget"
+                  name="budgetRange"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget</FormLabel>
+                      <FormLabel>Budget range</FormLabel>
                       <Select onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
@@ -199,14 +257,11 @@ export function AssessmentForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="< $50k">$50k</SelectItem>
-                          <SelectItem value="$50k - $100k">
-                            $50k - $100k
-                          </SelectItem>
-                          <SelectItem value="$100k - $500k">
-                            $100k - $500k
-                          </SelectItem>
-                          <SelectItem value="$500k+">$500k+</SelectItem>
+                          {BUDGETS.map((budget) => (
+                            <SelectItem key={budget} value={budget}>
+                              {budget}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -216,10 +271,10 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="timeline"
+                  name="timelineExpectations"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Timeline</FormLabel>
+                      <FormLabel>Timeline expectations</FormLabel>
                       <Select onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
@@ -227,14 +282,11 @@ export function AssessmentForm() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="< 3 months">
-                            &lt; 3 months
-                          </SelectItem>
-                          <SelectItem value="3-6 months">3-6 months</SelectItem>
-                          <SelectItem value="6-12 months">
-                            6-12 months
-                          </SelectItem>
-                          <SelectItem value="12+ months">12+ months</SelectItem>
+                          {TIMELINES.map((timeline) => (
+                            <SelectItem key={timeline} value={timeline}>
+                              {timeline}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -244,24 +296,26 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="expertise_level"
+                  name="technicalExpertiseLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Expertise Level</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select expertise level" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4">4</SelectItem>
-                          <SelectItem value="5">5</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Technical expertise level (1-5)</FormLabel>
+                      <div>
+                        {TECHNICAL_EXPERTISE_LEVELS.map((value) => (
+                          <FormControl key={value}>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                value={value}
+                                checked={field.value === value}
+                                onChange={() => field.onChange(value)}
+                                className="h-4 w-4"
+                              />
+                              <label>{value}</label>
+                            </div>
+                          </FormControl>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -269,21 +323,66 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="ai_experience"
+                  name="mainBusinessChallenge"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>AI Experience</FormLabel>
-                      <Select onValueChange={field.onChange}>
+                      <FormLabel>Main business challenge</FormLabel>
+                      <div className="space-y-2">
+                        {MAIN_BUSINESS_CHALLENGES.map((option) => (
+                          <FormControl key={option}>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={field.value?.includes(option)}
+                                onChange={(e) => {
+                                  const updatedValue = e.target.checked
+                                    ? [...(field.value || []), option]
+                                    : field.value?.filter(
+                                        (val: string) => val !== option,
+                                      ) || [];
+                                  field.onChange(updatedValue);
+                                }}
+                                className="h-4 w-4"
+                              />
+                              <label>{option}</label>
+                            </div>
+                          </FormControl>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="previousAiExperience"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Previous AI experience</FormLabel>
+                      <div className="flex gap-4">
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select AI experience" />
-                          </SelectTrigger>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              checked={field.value === true}
+                              onChange={() => field.onChange(true)}
+                              className="h-4 w-4"
+                            />
+                            <label>Yes</label>
+                          </div>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="true">Yes</SelectItem>
-                          <SelectItem value="false">No</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <FormControl>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              checked={field.value === false}
+                              onChange={() => field.onChange(false)}
+                              className="h-4 w-4"
+                            />
+                            <label>No</label>
+                          </div>
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -291,29 +390,32 @@ export function AssessmentForm() {
 
                 <FormField
                   control={form.control}
-                  name="priority_area"
+                  name="priorityArea"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Priority Area</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority area" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Customer Service">
-                            Customer Service
-                          </SelectItem>
-                          <SelectItem value="Process Automation">
-                            Process Automation
-                          </SelectItem>
-                          <SelectItem value="Decision Support">
-                            Decision Support
-                          </SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Priority area</FormLabel>
+                      <div className="space-y-2">
+                        {PRIORITY_AREAS.map((option) => (
+                          <FormControl key={option}>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={field.value?.includes(option)}
+                                onChange={(e) => {
+                                  const updatedValue = e.target.checked
+                                    ? [...(field.value || []), option]
+                                    : field.value?.filter(
+                                        (val: string) => val !== option,
+                                      ) || [];
+                                  field.onChange(updatedValue);
+                                }}
+                                className="h-4 w-4"
+                              />
+                              <label>{option}</label>
+                            </div>
+                          </FormControl>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -323,7 +425,11 @@ export function AssessmentForm() {
           />
 
           <div className="flex justify-between">
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="animate-button-glow bg-gradient-to-r from-blue-600 to-red-500 text-white hover:from-blue-700 hover:to-red-600"
+            >
               {isPending ? "Submitting..." : "Submit"}
             </Button>
           </div>

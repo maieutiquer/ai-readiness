@@ -17,25 +17,15 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background bg-gradient-to-b text-foreground">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <ModeToggle />
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-          <span className="text-[hsl(280,100%,70%)]">AI</span> Readiness
-          Assessment Tool
-        </h1>
-        <Card className="mx-auto max-w-lg bg-background text-foreground">
-          <CardHeader>
-            <CardTitle>
-              Please answer the following questions to help us understand your
-              organization&apos;s AI readiness.
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AssessmentForm />
-          </CardContent>
-        </Card>
-      </div>
+    <main className="flex flex-col items-center gap-20 p-10">
+      <ModeToggle />
+      <h1 className="text-7xl">
+        <span className="animate-gradient-pulse bg-gradient-to-r from-blue-600 via-blue-400 to-red-500 bg-clip-text font-extrabold text-transparent drop-shadow-[0_0_30px_rgba(192,38,211,0.5)]">
+          AI
+        </span>{" "}
+        Readiness Assessment Tool
+      </h1>
+      <AssessmentForm />
     </main>
   );
 }

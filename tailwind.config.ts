@@ -1,5 +1,6 @@
 import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
+import animate from "tailwindcss-animate";
 
 export default {
   content: ["./src/**/*.tsx"],
@@ -55,8 +56,48 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
       },
+      animation: {
+        "gradient-pulse": "gradient-rainbow 6s linear infinite",
+        "button-glow": "button-glow 6s linear infinite",
+      },
+      keyframes: {
+        "gradient-rainbow": {
+          "0%": {
+            "background-size": "200% 200%",
+            "background-position": "0% 50%",
+            "text-shadow": "0 0 30px rgba(37, 99, 235, 0.7)",
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "100% 50%",
+            "text-shadow": "0 0 30px rgba(239, 68, 68, 0.7)",
+          },
+          "100%": {
+            "background-size": "200% 200%",
+            "background-position": "0% 50%",
+            "text-shadow": "0 0 30px rgba(37, 99, 235, 0.7)",
+          },
+        },
+        "button-glow": {
+          "0%": {
+            "background-size": "200% 200%",
+            "background-position": "0% 50%",
+            "box-shadow": "0 0 30px rgba(37, 99, 235, 0.9)",
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "100% 50%",
+            "box-shadow": "0 0 30px rgba(239, 68, 68, 0.9)",
+          },
+          "100%": {
+            "background-size": "200% 200%",
+            "background-position": "0% 50%",
+            "box-shadow": "0 0 30px rgba(37, 99, 235, 0.9)",
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
   darkMode: ["class"],
 } satisfies Config;
