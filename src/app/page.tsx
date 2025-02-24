@@ -1,8 +1,7 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { AssessmentForm } from "./_components/AssessmentForm";
+import { AssessmentForm } from "./_components/form/AssessmentForm";
 import { ModeToggle } from "./_components/ModeToggle";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
