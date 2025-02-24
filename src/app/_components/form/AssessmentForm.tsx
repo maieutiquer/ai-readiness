@@ -139,7 +139,7 @@ export function AssessmentForm() {
               disabled={isPending}
               className="animate-button-glow bg-gradient-to-r from-blue-600 to-red-500 text-white hover:from-blue-700 hover:to-red-600"
             >
-              {isPending ? "Submitting..." : "Submit"}
+              {isPending ? "Generating AI report..." : "Generate AI report"}
             </Button>
           </div>
 
@@ -157,7 +157,7 @@ export function AssessmentForm() {
             <CardTitle>AI Recommendations:</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>{aiRecommendations}</p>
+            <pre className="whitespace-pre-wrap">{aiRecommendations}</pre>
           </CardContent>
         </Card>
       )}
