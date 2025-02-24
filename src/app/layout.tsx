@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
+import { Toaster } from "~/components/ui/sonner";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "~/components/theme-provider";
@@ -28,6 +29,8 @@ export default function RootLayout({
         >
           <TRPCReactProvider>{children}</TRPCReactProvider>
         </ThemeProvider>
+
+        <Toaster richColors closeButton />
       </body>
     </html>
   );

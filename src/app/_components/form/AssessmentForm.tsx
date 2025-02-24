@@ -1,11 +1,12 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Form } from "~/components/ui/form";
+import { toast } from "sonner";
 import {
   SelectField,
   RadioGroupField,
@@ -33,26 +34,57 @@ export function AssessmentForm() {
       dataAvailability: [],
       mainBusinessChallenge: [],
       priorityArea: [],
-      previousAiExperience: false,
+      ...(process.env.NODE_ENV === "development"
+        ? {
+            companySize: COMPANY_SIZES[0],
+            industry: INDUSTRIES[0],
+            techStackMaturity: TECH_STACK_MATURITY_LEVELS[0],
+            budgetRange: BUDGETS[0],
+            timelineExpectations: TIMELINES[0],
+            technicalExpertiseLevel: TECHNICAL_EXPERTISE_LEVELS[0],
+            previousAiExperience: false,
+          }
+        : {}),
     },
   });
 
   const [aiRecommendations, setAiRecommendations] = useState<string | null>(
     null,
   );
+  const recommendationsRef = useRef<HTMLDivElement>(null);
 
   const { mutate, error, isPending } = api.assessment.create.useMutation({
     onSuccess: (response) => {
-      console.log("Success response:", response);
       setAiRecommendations(response.data.recommendations);
+      toast.success("AI report generated successfully!");
+
+      setTimeout(() => {
+        if (recommendationsRef.current) {
+          recommendationsRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 150);
     },
     onError: (error) => {
-      console.error("Error submitting form:", error);
+      console.error("Error generating AI report:", error);
+      toast.error("Error generating AI report, please try again. Error:", {
+        description: error.message,
+        action: (
+          <Button
+            type="submit"
+            className="animate-button-glow bg-gradient-to-r from-blue-600 to-red-500 text-white hover:from-blue-700 hover:to-red-600"
+            onClick={() => {
+              mutate(form.getValues());
+              toast.dismiss();
+            }}
+          >
+            Retry
+          </Button>
+        ),
+      });
     },
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log("Submitting form data:", data);
     mutate(data);
   };
 
@@ -152,14 +184,16 @@ export function AssessmentForm() {
       </Form>
 
       {aiRecommendations && (
-        <Card className="mt-6 dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle>AI Recommendations:</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="whitespace-pre-wrap">{aiRecommendations}</pre>
-          </CardContent>
-        </Card>
+        <div ref={recommendationsRef}>
+          <Card className="mt-6 dark:bg-slate-900">
+            <CardHeader>
+              <CardTitle>AI Recommendations:</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="whitespace-pre-wrap">{aiRecommendations}</pre>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </>
   );

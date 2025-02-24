@@ -39,7 +39,10 @@ export function SelectField({
       render={({ field }) => (
         <FormItem>
           <FormLabel className="text-base">{label}</FormLabel>
-          <Select onValueChange={field.onChange}>
+          <Select
+            onValueChange={field.onChange}
+            defaultValue={field.value as string}
+          >
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />

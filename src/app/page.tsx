@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { AssessmentForm } from "./_components/form/AssessmentForm";
 import { ModeToggle } from "./_components/ModeToggle";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);

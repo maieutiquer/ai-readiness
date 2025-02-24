@@ -9,7 +9,7 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Checkbox } from "~/components/ui/checkbox";
-import type { FormValues } from "../types";
+import type { FormValues } from "../formDefinitions";
 
 // Type utility to extract array field names from FormValues
 type ArrayFields<T> = {

@@ -10,7 +10,7 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Switch } from "~/components/ui/switch";
-import type { FormValues } from "../types";
+import type { FormValues } from "../formDefinitions";
 
 interface BooleanRadioGroupProps {
   control: Control<FormValues>;
