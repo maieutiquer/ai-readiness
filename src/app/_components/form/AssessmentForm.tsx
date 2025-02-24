@@ -21,6 +21,9 @@ import {
   FormControl,
   FormMessage,
 } from "~/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Label } from "~/components/ui/label";
 
 const COMPANY_SIZES = [
   "1-10 employees",
@@ -140,287 +143,328 @@ export function AssessmentForm() {
             control={form.control}
             name="companySize"
             render={({ field }) => (
-              <>
-                <FormItem>
-                  <FormLabel>Company size</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select company size" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {COMPANY_SIZES.map((size) => (
-                        <SelectItem key={size} value={size}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+              <FormItem>
+                <FormLabel>Company size</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select company size" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {COMPANY_SIZES.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <FormField
-                  control={form.control}
-                  name="industry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Industry</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {INDUSTRIES.map((industry) => (
-                            <SelectItem key={industry} value={industry}>
-                              {industry}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <FormField
+            control={form.control}
+            name="industry"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Industry</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select industry" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {INDUSTRIES.map((industry) => (
+                      <SelectItem key={industry} value={industry}>
+                        {industry}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <FormField
-                  control={form.control}
-                  name="techStackMaturity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current tech stack maturity (1-5)</FormLabel>
-                      <div>
-                        {TECH_STACK_MATURITY_LEVELS.map((value) => (
-                          <FormControl key={value}>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="radio"
-                                value={value}
-                                checked={field.value === value}
-                                onChange={() => field.onChange(value)}
-                              />
-                              <label>{value}</label>
-                            </div>
-                          </FormControl>
-                        ))}
+          <FormField
+            control={form.control}
+            name="techStackMaturity"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>Current tech stack maturity (1-5)</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1"
+                  >
+                    {TECH_STACK_MATURITY_LEVELS.map((level) => (
+                      <div key={level} className="flex items-center space-x-2">
+                        <RadioGroupItem value={level} id={level} />
+                        <Label htmlFor={level}>{level}</Label>
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                <FormField
-                  control={form.control}
-                  name="dataAvailability"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data availability</FormLabel>
-                      <div className="space-y-2">
-                        {DATA_AVAILABILITY_OPTIONS.map((option) => (
-                          <FormControl key={option}>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={field.value?.includes(option)}
-                                onChange={(e) => {
-                                  const updatedValue = e.target.checked
-                                    ? [...(field.value || []), option]
-                                    : field.value?.filter(
-                                        (val: string) => val !== option,
-                                      ) || [];
-                                  field.onChange(updatedValue);
-                                }}
-                                className="h-4 w-4"
-                              />
-                              <label>{option}</label>
-                            </div>
-                          </FormControl>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="budgetRange"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Budget range</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select budget" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {BUDGETS.map((budget) => (
-                            <SelectItem key={budget} value={budget}>
-                              {budget}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="timelineExpectations"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timeline expectations</FormLabel>
-                      <Select onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select timeline" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {TIMELINES.map((timeline) => (
-                            <SelectItem key={timeline} value={timeline}>
-                              {timeline}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="technicalExpertiseLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Technical expertise level (1-5)</FormLabel>
-                      <div>
-                        {TECHNICAL_EXPERTISE_LEVELS.map((value) => (
-                          <FormControl key={value}>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="radio"
-                                value={value}
-                                checked={field.value === value}
-                                onChange={() => field.onChange(value)}
-                                className="h-4 w-4"
-                              />
-                              <label>{value}</label>
-                            </div>
-                          </FormControl>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="mainBusinessChallenge"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Main business challenge</FormLabel>
-                      <div className="space-y-2">
-                        {MAIN_BUSINESS_CHALLENGES.map((option) => (
-                          <FormControl key={option}>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={field.value?.includes(option)}
-                                onChange={(e) => {
-                                  const updatedValue = e.target.checked
-                                    ? [...(field.value || []), option]
-                                    : field.value?.filter(
-                                        (val: string) => val !== option,
-                                      ) || [];
-                                  field.onChange(updatedValue);
-                                }}
-                                className="h-4 w-4"
-                              />
-                              <label>{option}</label>
-                            </div>
-                          </FormControl>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="previousAiExperience"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Previous AI experience</FormLabel>
-                      <div className="flex gap-4">
-                        <FormControl>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              checked={field.value === true}
-                              onChange={() => field.onChange(true)}
-                              className="h-4 w-4"
+          <FormField
+            control={form.control}
+            name="dataAvailability"
+            render={() => (
+              <FormItem>
+                <div className="mb-4">
+                  <FormLabel className="text-base">Data availability</FormLabel>
+                </div>
+                {DATA_AVAILABILITY_OPTIONS.map((option) => (
+                  <FormField
+                    key={option}
+                    control={form.control}
+                    name="dataAvailability"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={option}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(option)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...field.value, option])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== option,
+                                      ),
+                                    );
+                              }}
                             />
-                            <label>Yes</label>
-                          </div>
-                        </FormControl>
-                        <FormControl>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              checked={field.value === false}
-                              onChange={() => field.onChange(false)}
-                              className="h-4 w-4"
-                            />
-                            <label>No</label>
-                          </div>
-                        </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="priorityArea"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority area</FormLabel>
-                      <div className="space-y-2">
-                        {PRIORITY_AREAS.map((option) => (
-                          <FormControl key={option}>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={field.value?.includes(option)}
-                                onChange={(e) => {
-                                  const updatedValue = e.target.checked
-                                    ? [...(field.value || []), option]
-                                    : field.value?.filter(
-                                        (val: string) => val !== option,
-                                      ) || [];
-                                  field.onChange(updatedValue);
-                                }}
-                                className="h-4 w-4"
-                              />
-                              <label>{option}</label>
-                            </div>
                           </FormControl>
-                        ))}
+                          <FormLabel className="font-normal">
+                            {option}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="budgetRange"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Budget range</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select budget" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {BUDGETS.map((budget) => (
+                      <SelectItem key={budget} value={budget}>
+                        {budget}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="timelineExpectations"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Timeline expectations</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select timeline" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {TIMELINES.map((timeline) => (
+                      <SelectItem key={timeline} value={timeline}>
+                        {timeline}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="technicalExpertiseLevel"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>Technical expertise level (1-5)</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1"
+                  >
+                    {TECHNICAL_EXPERTISE_LEVELS.map((level) => (
+                      <div key={level} className="flex items-center space-x-2">
+                        <RadioGroupItem value={level} id={level} />
+                        <Label htmlFor={level}>{level}</Label>
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="previousAiExperience"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>Previous AI experience</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={(value) => field.onChange(value === "true")}
+                    defaultValue={field.value ? "true" : "false"}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="true" id="ai-yes" />
+                      <Label htmlFor="ai-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="false" id="ai-no" />
+                      <Label htmlFor="ai-no">No</Label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="mainBusinessChallenge"
+            render={() => (
+              <FormItem>
+                <div className="mb-4">
+                  <FormLabel className="text-base">
+                    Main business challenge
+                  </FormLabel>
+                </div>
+                {MAIN_BUSINESS_CHALLENGES.map((option) => (
+                  <FormField
+                    key={option}
+                    control={form.control}
+                    name="mainBusinessChallenge"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={option}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(option)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...field.value, option])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== option,
+                                      ),
+                                    );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {option}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="priorityArea"
+            render={() => (
+              <FormItem>
+                <div className="mb-4">
+                  <FormLabel className="text-base">Priority area</FormLabel>
+                </div>
+                {PRIORITY_AREAS.map((option) => (
+                  <FormField
+                    key={option}
+                    control={form.control}
+                    name="priorityArea"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={option}
+                          className="flex flex-row items-start space-x-3 space-y-0"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(option)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...field.value, option])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== option,
+                                      ),
+                                    );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            {option}
+                          </FormLabel>
+                        </FormItem>
+                      );
+                    }}
+                  />
+                ))}
+                <FormMessage />
+              </FormItem>
             )}
           />
 
