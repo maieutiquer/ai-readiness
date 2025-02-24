@@ -67,7 +67,7 @@ export function AssessmentForm() {
     null,
   );
 
-  const { mutate, isLoading, error } = api.assessment.create.useMutation({
+  const { mutate, error, isPending } = api.assessment.create.useMutation({
     onSuccess: (response) => {
       console.log("Success response:", response);
       setAiRecommendations(response.data.recommendations);
@@ -323,8 +323,8 @@ export function AssessmentForm() {
           />
 
           <div className="flex justify-between">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Submitting..." : "Submit"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
             </Button>
           </div>
 
