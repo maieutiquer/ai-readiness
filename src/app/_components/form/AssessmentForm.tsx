@@ -111,9 +111,207 @@ export const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Select Field Component
+interface SelectFieldProps {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+  placeholder: string;
+  options: readonly string[];
+}
+
+function SelectField({
+  control,
+  name,
+  label,
+  placeholder,
+  options,
+}: SelectFieldProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+// Radio Group Field Component
+interface RadioGroupFieldProps {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+  options: readonly string[];
+  className?: string;
+}
+
+function RadioGroupField({
+  control,
+  name,
+  label,
+  options,
+  className = "flex flex-col space-y-1",
+}: RadioGroupFieldProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-3">
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <RadioGroup
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+              className={className}
+            >
+              {options.map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={option} />
+                  <Label htmlFor={option}>{option}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+// Boolean Radio Group Component
+interface BooleanRadioGroupProps {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+  className?: string;
+}
+
+function BooleanRadioGroup({
+  control,
+  name,
+  label,
+  className = "flex gap-4",
+}: BooleanRadioGroupProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-3">
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <RadioGroup
+              onValueChange={(value) => field.onChange(value === "true")}
+              defaultValue={field.value ? "true" : "false"}
+              className={className}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="true" id={`${name}-yes`} />
+                <Label htmlFor={`${name}-yes`}>Yes</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="false" id={`${name}-no`} />
+                <Label htmlFor={`${name}-no`}>No</Label>
+              </div>
+            </RadioGroup>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+// Checkbox Group Component
+interface CheckboxGroupProps {
+  control: any;
+  name: keyof FormValues;
+  label: string;
+  options: readonly string[];
+}
+
+function CheckboxGroup({ control, name, label, options }: CheckboxGroupProps) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={() => (
+        <FormItem>
+          <div className="mb-4">
+            <FormLabel className="text-base">{label}</FormLabel>
+          </div>
+          {options.map((option) => (
+            <FormField
+              key={option}
+              control={control}
+              name={name}
+              render={({ field }) => {
+                return (
+                  <FormItem
+                    key={option}
+                    className="flex flex-row items-start space-x-3 space-y-0"
+                  >
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value?.includes(option)}
+                        onCheckedChange={(checked) => {
+                          // Fix for the bug: ensure field.value is an array before spreading
+                          const currentValue = Array.isArray(field.value)
+                            ? field.value
+                            : [];
+                          return checked
+                            ? field.onChange([...currentValue, option])
+                            : field.onChange(
+                                currentValue.filter(
+                                  (value) => value !== option,
+                                ),
+                              );
+                        }}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">{option}</FormLabel>
+                  </FormItem>
+                );
+              }}
+            />
+          ))}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
 export function AssessmentForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      dataAvailability: [],
+      mainBusinessChallenge: [],
+      priorityArea: [],
+      previousAiExperience: false,
+    },
   });
 
   const [aiRecommendations, setAiRecommendations] = useState<string | null>(
@@ -139,333 +337,77 @@ export function AssessmentForm() {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
+          <SelectField
             control={form.control}
             name="companySize"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company size</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select company size" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {COMPANY_SIZES.map((size) => (
-                      <SelectItem key={size} value={size}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Company size"
+            placeholder="Select company size"
+            options={COMPANY_SIZES}
           />
 
-          <FormField
+          <SelectField
             control={form.control}
             name="industry"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Industry</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {INDUSTRIES.map((industry) => (
-                      <SelectItem key={industry} value={industry}>
-                        {industry}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Industry"
+            placeholder="Select industry"
+            options={INDUSTRIES}
           />
 
-          <FormField
+          <RadioGroupField
             control={form.control}
             name="techStackMaturity"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Current tech stack maturity (1-5)</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    {TECH_STACK_MATURITY_LEVELS.map((level) => (
-                      <div key={level} className="flex items-center space-x-2">
-                        <RadioGroupItem value={level} id={level} />
-                        <Label htmlFor={level}>{level}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Current tech stack maturity (1-5)"
+            options={TECH_STACK_MATURITY_LEVELS}
           />
 
-          <FormField
+          <CheckboxGroup
             control={form.control}
             name="dataAvailability"
-            render={() => (
-              <FormItem>
-                <div className="mb-4">
-                  <FormLabel className="text-base">Data availability</FormLabel>
-                </div>
-                {DATA_AVAILABILITY_OPTIONS.map((option) => (
-                  <FormField
-                    key={option}
-                    control={form.control}
-                    name="dataAvailability"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={option}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(option)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, option])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== option,
-                                      ),
-                                    );
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            {option}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                ))}
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Data availability"
+            options={DATA_AVAILABILITY_OPTIONS}
           />
 
-          <FormField
+          <SelectField
             control={form.control}
             name="budgetRange"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Budget range</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select budget" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {BUDGETS.map((budget) => (
-                      <SelectItem key={budget} value={budget}>
-                        {budget}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Budget range"
+            placeholder="Select budget"
+            options={BUDGETS}
           />
 
-          <FormField
+          <SelectField
             control={form.control}
             name="timelineExpectations"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Timeline expectations</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timeline" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {TIMELINES.map((timeline) => (
-                      <SelectItem key={timeline} value={timeline}>
-                        {timeline}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Timeline expectations"
+            placeholder="Select timeline"
+            options={TIMELINES}
           />
 
-          <FormField
+          <RadioGroupField
             control={form.control}
             name="technicalExpertiseLevel"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Technical expertise level (1-5)</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    {TECHNICAL_EXPERTISE_LEVELS.map((level) => (
-                      <div key={level} className="flex items-center space-x-2">
-                        <RadioGroupItem value={level} id={level} />
-                        <Label htmlFor={level}>{level}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Technical expertise level (1-5)"
+            options={TECHNICAL_EXPERTISE_LEVELS}
           />
 
-          <FormField
+          <BooleanRadioGroup
             control={form.control}
             name="previousAiExperience"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>Previous AI experience</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={(value) => field.onChange(value === "true")}
-                    defaultValue={field.value ? "true" : "false"}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="true" id="ai-yes" />
-                      <Label htmlFor="ai-yes">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="false" id="ai-no" />
-                      <Label htmlFor="ai-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Previous AI experience"
           />
 
-          <FormField
+          <CheckboxGroup
             control={form.control}
             name="mainBusinessChallenge"
-            render={() => (
-              <FormItem>
-                <div className="mb-4">
-                  <FormLabel className="text-base">
-                    Main business challenge
-                  </FormLabel>
-                </div>
-                {MAIN_BUSINESS_CHALLENGES.map((option) => (
-                  <FormField
-                    key={option}
-                    control={form.control}
-                    name="mainBusinessChallenge"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={option}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(option)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, option])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== option,
-                                      ),
-                                    );
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            {option}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                ))}
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Main business challenge"
+            options={MAIN_BUSINESS_CHALLENGES}
           />
 
-          <FormField
+          <CheckboxGroup
             control={form.control}
             name="priorityArea"
-            render={() => (
-              <FormItem>
-                <div className="mb-4">
-                  <FormLabel className="text-base">Priority area</FormLabel>
-                </div>
-                {PRIORITY_AREAS.map((option) => (
-                  <FormField
-                    key={option}
-                    control={form.control}
-                    name="priorityArea"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={option}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(option)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, option])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== option,
-                                      ),
-                                    );
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">
-                            {option}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                ))}
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Priority area"
+            options={PRIORITY_AREAS}
           />
 
           <div className="flex justify-between">
