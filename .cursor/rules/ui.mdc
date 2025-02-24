@@ -1,0 +1,10 @@
+---
+description: ui components
+globs: *.tsx
+alwaysApply: false
+---
+we are using npm and npx
+we are using shadcn@canary
+you can add shadcn components using `npx shadcn@canary add`
+use shadcn code for ui components
+use react-hook-form for forms
