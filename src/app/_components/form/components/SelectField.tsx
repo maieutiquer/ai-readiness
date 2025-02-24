@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import type { FormValues } from "../types";
+import type { FormValues } from "../formDefinitions";
 
 interface SelectFieldProps {
   control: Control<FormValues>;
