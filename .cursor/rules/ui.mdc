@@ -3,8 +3,12 @@ description: ui components
 globs: *.tsx
 alwaysApply: false
 ---
-we are using npm and npx
-we are using shadcn@canary
-you can add shadcn components using `npx shadcn@canary add`
-use shadcn code for ui components
-use react-hook-form for forms
+we use pnpm https://pnpm.io/pnpm-cli
+
+we use shadcn@canary https://ui.shadcn.com/docs
+
+we add shadcn components using `pnpm dlx shadcn@canary add`
+
+we use shadcn code for ui components instead of plain html elements in tsx
+
+we use react-hook-form for forms

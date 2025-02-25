@@ -8,10 +8,11 @@ This app is deployed to Vercel:
 
 ## Getting started
 
-To run this app locally, clone this repo and run:
+To run this app locally, you need to have Node.js ^22, then run
 
-- `npm install`
-- `npm run dev`
+- `corepack enable` - optional, only if you don't have corepack enabled, nor pnpm installed
+- `pnpm install`
+- `pnpm run dev`
 
 ## What's T3?
 

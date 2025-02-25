@@ -18,8 +18,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: "npm"
-      - run: npm ci
+          cache: "pnpm"
+      - run: pnpm ci
       - name: Cache node_modules
         uses: actions/cache@v4
         with:
@@ -38,7 +38,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - run: npm run format:check
+      - run: pnpm run format:check
 
   lint:
     needs: setup
@@ -50,7 +50,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - run: npm run lint
+      - run: pnpm run lint
 
   type-check:
     needs: setup
@@ -62,7 +62,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - run: npm run typecheck
+      - run: pnpm run typecheck
 
   unit-tests:
     needs: setup
@@ -74,7 +74,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - run: npm run test
+      - run: pnpm run test
 
   build:
     # the resulting build is not used for anything, it's just for checking if the build is working
@@ -87,4 +87,4 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - run: npm run build
+      - run: pnpm run build
