@@ -1,5 +1,6 @@
 import { type Config } from "tailwindcss";
-import { fontFamily } from "tailwindcss/defaultTheme";
+// import "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
 import animate from "tailwindcss-animate";
 
 export default {
@@ -7,7 +8,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-geist-sans)", ...fontFamily.sans],
+        sans: ["var(--font-geist-sans)", ...defaultTheme.fontFamily.sans],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -99,5 +100,5 @@ export default {
     },
   },
   plugins: [animate],
-  darkMode: ["class"],
+  darkMode: "class",
 } satisfies Config;
