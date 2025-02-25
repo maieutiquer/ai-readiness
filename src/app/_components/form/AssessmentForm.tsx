@@ -26,6 +26,8 @@ import {
   formSchema,
   type FormValues,
 } from "./formDefinitions";
+import { calculateAiReadinessScore } from "./scoring";
+import { Progress } from "~/components/ui/progress";
 
 export function AssessmentForm() {
   const form = useForm<FormValues>({
@@ -51,6 +53,11 @@ export function AssessmentForm() {
   const [aiRecommendations, setAiRecommendations] = useState<string | null>(
     null,
   );
+  const [readinessScore, setReadinessScore] = useState<{
+    score: number;
+    readinessLevel: string;
+    description: string;
+  } | null>(null);
   const recommendationsRef = useRef<HTMLDivElement>(null);
 
   const { mutate, error, isPending } = api.assessment.create.useMutation({
@@ -85,7 +92,20 @@ export function AssessmentForm() {
   });
 
   const onSubmit = (data: FormValues) => {
-    mutate(data);
+    // Calculate AI readiness score
+    const scoreResult = calculateAiReadinessScore(data);
+    setReadinessScore({
+      score: scoreResult.score,
+      readinessLevel: scoreResult.readinessLevel || "Not Available",
+      description: scoreResult.description || "No description available",
+    });
+
+    // Include score in the API call
+    mutate({
+      ...data,
+      aiReadinessScore: scoreResult.score,
+      aiReadinessLevel: scoreResult.readinessLevel,
+    });
   };
 
   return (
@@ -183,9 +203,34 @@ export function AssessmentForm() {
         </form>
       </Form>
 
-      {aiRecommendations && (
+      {readinessScore && (
         <div ref={recommendationsRef}>
           <Card className="mt-6 dark:bg-slate-900">
+            <CardHeader>
+              <CardTitle>
+                AI readiness score: {readinessScore.score}/100
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <Progress value={readinessScore.score} className="h-2" />
+              </div>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold">
+                  {readinessScore.readinessLevel}
+                </h3>
+                <p className="text-muted-foreground">
+                  {readinessScore.description}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {aiRecommendations && (
+        <div className={readinessScore ? "mt-4" : ""}>
+          <Card className="dark:bg-slate-900">
             <CardHeader>
               <CardTitle>AI Recommendations:</CardTitle>
             </CardHeader>
