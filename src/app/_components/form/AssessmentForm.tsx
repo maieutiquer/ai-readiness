@@ -58,11 +58,13 @@ export function AssessmentForm() {
     readinessLevel: string;
     description: string;
   } | null>(null);
+  const [isCached, setIsCached] = useState<boolean>(false);
   const recommendationsRef = useRef<HTMLDivElement>(null);
 
   const { mutate, error, isPending } = api.assessment.create.useMutation({
     onSuccess: (response) => {
       setAiRecommendations(response.data.recommendations);
+      setIsCached(response.data.cached ?? false);
 
       // Use the AI readiness score from the API response if available
       if (
@@ -85,7 +87,11 @@ export function AssessmentForm() {
         });
       }
 
-      toast.success("AI report generated successfully!");
+      toast.success(
+        response.data.cached
+          ? "AI report retrieved from cache"
+          : "AI report generated successfully!",
+      );
 
       setTimeout(() => {
         if (recommendationsRef.current) {
@@ -224,8 +230,13 @@ export function AssessmentForm() {
         <div ref={recommendationsRef}>
           <Card className="mt-6 dark:bg-slate-900">
             <CardHeader>
-              <CardTitle>
-                AI readiness score: {readinessScore.score}/100
+              <CardTitle className="flex items-center justify-between">
+                <span>AI readiness score: {readinessScore.score}/100</span>
+                {isCached && (
+                  <span className="text-muted-foreground text-sm font-normal">
+                    (Cached result)
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>

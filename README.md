@@ -11,6 +11,7 @@ This application helps organizations assess their readiness for AI adoption thro
   - Actionable Strategy
   - Systems Integration
 - **Detailed Recommendations**: Provides tailored recommendations based on assessment responses
+- **Response Caching**: Stores assessment responses and AI-generated reports in PostgreSQL for faster retrieval and reduced API costs
 
 ## AI Agent Architecture
 
@@ -21,12 +22,24 @@ The application uses a multi-agent system built with LangChain.js:
 3. **Technical Consultant Agent**: Recommends tools and technologies for AI integration
 4. **Report Generator Agent**: Compiles findings into a structured report
 
+## Caching System
+
+The application implements a caching system to store assessment responses and AI-generated reports in PostgreSQL:
+
+1. When a user submits an assessment, the system generates a hash of the input data
+2. Before calling the OpenAI API, the system checks if an assessment with the same hash already exists in the database
+3. If a match is found, the system returns the cached report instead of generating a new one
+4. If no match is found, the system generates a new report and stores it in the database for future use
+
+This approach reduces API costs and improves response times for repeated assessments.
+
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
 - pnpm 10+
+- PostgreSQL database
 
 ### Installation
 
@@ -40,7 +53,10 @@ pnpm install
 
 # Set up environment variables
 cp .env.example .env
-# Add your OpenAI API key to the .env file
+# Add your OpenAI API key and database connection details to the .env file
+
+# Push the database schema
+pnpm prisma db push
 ```
 
 ### Development
@@ -64,6 +80,7 @@ pnpm start
 
 - **Frontend**: Next.js, React, Tailwind CSS, shadcn/ui
 - **Backend**: tRPC, Prisma
+- **Database**: PostgreSQL
 - **AI**: LangChain.js, OpenAI API
 
 ## License

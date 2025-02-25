@@ -2,6 +2,7 @@ import { formSchema } from "~/app/_components/form/formDefinitions";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { AiOrchestrator } from "~/lib/ai/aiOrchestrator";
+import { AssessmentService } from "~/server/db/assessmentService";
 
 // Extend the form schema to include the AI readiness score
 const assessmentInputSchema = formSchema.extend({
@@ -14,6 +15,30 @@ export const assessmentRouter = createTRPCRouter({
     .input(assessmentInputSchema)
     .mutation(async ({ input }) => {
       try {
+        // Initialize the assessment service
+        const assessmentService = new AssessmentService();
+
+        // Check if we already have a cached result for this input
+        const cachedReport =
+          await assessmentService.findExistingAssessment(input);
+
+        if (cachedReport) {
+          console.log("Using cached AI readiness report");
+          return {
+            success: true,
+            data: {
+              recommendations: cachedReport.formattedReport,
+              aiReadinessScore: cachedReport.aiReadinessScore,
+              aiReadinessLevel: cachedReport.aiReadinessLevel,
+              description: cachedReport.description,
+              cached: true,
+            },
+          };
+        }
+
+        // If no cached result, generate a new report
+        console.log("Generating new AI readiness report");
+
         // Initialize the AI orchestrator
         const aiOrchestrator = new AiOrchestrator();
 
@@ -39,6 +64,21 @@ ${report.description}
 ${report.recommendations}
 `;
 
+        // Get the agent results from the orchestrator
+        const agentResults = {
+          dataAnalyst: aiOrchestrator.getDataAnalystResult(),
+          strategyAdvisor: aiOrchestrator.getStrategyAdvisorResult(),
+          technicalConsultant: aiOrchestrator.getTechnicalConsultantResult(),
+        };
+
+        // Save the assessment and report to the database
+        await assessmentService.saveAssessment(
+          input,
+          agentResults,
+          report,
+          formattedRecommendations,
+        );
+
         return {
           success: true,
           data: {
@@ -46,6 +86,7 @@ ${report.recommendations}
             aiReadinessScore: report.overallScore,
             aiReadinessLevel: report.readinessLevel,
             description: report.description,
+            cached: false,
           },
         };
       } catch (error) {
@@ -60,6 +101,7 @@ ${report.recommendations}
             aiReadinessLevel: "Error",
             description:
               "An error occurred while generating the AI readiness report.",
+            cached: false,
           },
         };
       }

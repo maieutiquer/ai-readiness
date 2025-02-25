@@ -11,11 +11,69 @@ datasource db {
     directUrl = env("DIRECT_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+// Assessment models
+model Assessment {
+    id                     String   @id @default(cuid())
+    companySize            String
+    industry               String
+    techStackMaturity      String
+    dataAvailability       String[] // Stored as a JSON array
+    budgetRange            String
+    timelineExpectations   String
+    technicalExpertiseLevel String
+    previousAiExperience   Boolean
+    mainBusinessChallenge  String[] // Stored as a JSON array
+    priorityArea           String[] // Stored as a JSON array
+    
+    // Metadata
+    createdAt              DateTime @default(now())
+    updatedAt              DateTime @updatedAt
+    
+    // Relations
+    aiReport               AiReport?
+    
+    // Hash for quick lookup
+    inputHash              String   @unique
+    
+    @@index([inputHash])
+}
 
-    @@index([name])
+model AiReport {
+    id                     String   @id @default(cuid())
+    assessmentId           String   @unique
+    assessment             Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+    
+    // Overall scores
+    overallScore           Int
+    readinessLevel         String
+    description            String   @db.Text
+    
+    // Pillar scores
+    technologyReadiness    Int
+    leadershipAlignment    Int
+    actionableStrategy     Int
+    systemsIntegration     Int
+    
+    // Agent results
+    dataAnalystInsights    String   @db.Text
+    dataAnalystScore       Int
+    dataAnalystRecommendations String[] // Stored as a JSON array
+    
+    strategyAdvisorInsights String  @db.Text
+    strategyAdvisorScore    Int
+    strategyAdvisorRecommendations String[] // Stored as a JSON array
+    
+    technicalConsultantInsights String @db.Text
+    technicalConsultantScore    Int
+    technicalConsultantRecommendations String[] // Stored as a JSON array
+    
+    // Final recommendations
+    recommendations        String   @db.Text
+    
+    // Formatted report for display
+    formattedReport        String   @db.Text
+    
+    // Metadata
+    createdAt              DateTime @default(now())
+    updatedAt              DateTime @updatedAt
 }

@@ -14,6 +14,11 @@ export class AiOrchestrator {
   private technicalConsultantAgent: TechnicalConsultantAgent;
   private reportGeneratorAgent: ReportGeneratorAgent;
 
+  // Store agent results for later retrieval
+  private dataAnalystResult: AgentResult | null = null;
+  private strategyAdvisorResult: AgentResult | null = null;
+  private technicalConsultantResult: AgentResult | null = null;
+
   constructor() {
     this.dataAnalystAgent = new DataAnalystAgent();
     this.strategyAdvisorAgent = new StrategyAdvisorAgent();
@@ -39,16 +44,17 @@ export class AiOrchestrator {
         ),
       ]);
 
-      const dataAnalystResult = results[0];
-      const strategyAdvisorResult = results[1];
-      const technicalConsultantResult = results[2];
+      // Store the results for later retrieval
+      this.dataAnalystResult = results[0];
+      this.strategyAdvisorResult = results[1];
+      this.technicalConsultantResult = results[2];
 
       // Generate the final report using the Report Generator Agent
       try {
         const report = await this.reportGeneratorAgent.generateReport(data, {
-          dataAnalyst: dataAnalystResult,
-          strategyAdvisor: strategyAdvisorResult,
-          technicalConsultant: technicalConsultantResult,
+          dataAnalyst: this.dataAnalystResult,
+          strategyAdvisor: this.strategyAdvisorResult,
+          technicalConsultant: this.technicalConsultantResult,
         });
 
         return report;
@@ -62,6 +68,28 @@ export class AiOrchestrator {
         "An error occurred while processing the assessment",
       );
     }
+  }
+
+  // Getter methods for agent results
+  getDataAnalystResult(): AgentResult {
+    if (!this.dataAnalystResult) {
+      throw new Error("Data Analyst result not available");
+    }
+    return this.dataAnalystResult;
+  }
+
+  getStrategyAdvisorResult(): AgentResult {
+    if (!this.strategyAdvisorResult) {
+      throw new Error("Strategy Advisor result not available");
+    }
+    return this.strategyAdvisorResult;
+  }
+
+  getTechnicalConsultantResult(): AgentResult {
+    if (!this.technicalConsultantResult) {
+      throw new Error("Technical Consultant result not available");
+    }
+    return this.technicalConsultantResult;
   }
 
   private async runAgentWithErrorHandling(
