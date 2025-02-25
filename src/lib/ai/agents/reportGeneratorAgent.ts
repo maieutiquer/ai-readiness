@@ -23,83 +23,178 @@ export interface ReportResult {
 export class ReportGeneratorAgent extends BaseAgent {
   async generateReport(
     data: FormValues,
-    agentResults: AgentResults,
+    agentResults: {
+      dataAnalyst: AgentResult;
+      strategyAdvisor: AgentResult;
+      technicalConsultant: AgentResult;
+    },
   ): Promise<ReportResult> {
-    const systemPrompt = `You are an expert Report Generator specializing in AI readiness assessments and AI adoption strategy.
-    Your task is to compile the findings from multiple AI agents into a comprehensive, structured report for AI adoption strategy based on assessment results.
-    
-    Based on the overall score, determine the readiness level:
-    - 0-20: "Early Stage" - Limited AI readiness with significant gaps
-    - 21-40: "Developing" - Beginning to build AI capabilities but with major challenges
-    - 41-60: "Advancing" - Moderate AI readiness with some key elements in place
-    - 61-80: "Established" - Strong foundation for AI adoption with minor gaps
-    - 81-100: "Leading" - Excellent AI readiness with robust capabilities
-    
-    IMPORTANT: If any follow-up questions were answered (check if any question has "answered: true" and an "answer" field),
-    create a special section in your recommendations titled "INSIGHTS FROM FOLLOW-UP QUESTIONS" that explicitly mentions 
-    each follow-up question and how the answer influenced your recommendations.
-    
-    Format your response as a JSON object with the following structure:
-    {
-      "overallScore": 0-100,
-      "readinessLevel": "Early Stage|Developing|Advancing|Established|Leading",
-      "description": "A detailed description of the company's overall AI readiness",
-      "pillars": {
-        "technologyReadiness": 0-25,
-        "leadershipAlignment": 0-25,
-        "actionableStrategy": 0-25,
-        "systemsIntegration": 0-25
-      },
-      "recommendations": "Comprehensive, structured recommendations based on all agent findings, with a special section for follow-up insights if applicable"
-    }
-    
-    IMPORTANT: Return ONLY the JSON object without any markdown formatting, code blocks, or additional text.`;
-
-    // Check if any follow-up questions were answered
-    const hasAnsweredQuestions = [
-      ...(agentResults.dataAnalyst.followUpQuestions || []),
-      ...(agentResults.strategyAdvisor.followUpQuestions || []),
-      ...(agentResults.technicalConsultant.followUpQuestions || []),
-    ].some((q) => q.answered && q.answer);
-
-    const userPrompt = `Please generate a comprehensive AI readiness report based on the following:
-    
-    Company Assessment Data:
-    ${JSON.stringify(data, null, 2)}
-    
-    Data Analyst Findings:
-    ${JSON.stringify(agentResults.dataAnalyst, null, 2)}
-    
-    Strategy Advisor Findings:
-    ${JSON.stringify(agentResults.strategyAdvisor, null, 2)}
-    
-    Technical Consultant Findings:
-    ${JSON.stringify(agentResults.technicalConsultant, null, 2)}
-    
-    ${hasAnsweredQuestions ? "IMPORTANT: Follow-up questions were answered. Please highlight these answers in your report and explain how they influenced your recommendations." : ""}`;
-
-    const responseText = await this.generateResponse(systemPrompt, userPrompt);
-    const jsonText = this.extractJsonFromResponse(responseText);
-
     try {
-      return JSON.parse(jsonText) as ReportResult;
+      // Check if any follow-up questions were answered
+      const hasAnsweredFollowUps =
+        agentResults.dataAnalyst.followUpQuestions?.some(
+          (q) => q.answered && q.answer,
+        ) ||
+        false ||
+        agentResults.strategyAdvisor.followUpQuestions?.some(
+          (q) => q.answered && q.answer,
+        ) ||
+        false ||
+        agentResults.technicalConsultant.followUpQuestions?.some(
+          (q) => q.answered && q.answer,
+        ) ||
+        false;
+
+      // Count how many follow-up questions were answered
+      const answeredQuestionCount =
+        (agentResults.dataAnalyst.followUpQuestions?.filter(
+          (q) => q.answered && q.answer,
+        ).length || 0) +
+        (agentResults.strategyAdvisor.followUpQuestions?.filter(
+          (q) => q.answered && q.answer,
+        ).length || 0) +
+        (agentResults.technicalConsultant.followUpQuestions?.filter(
+          (q) => q.answered && q.answer,
+        ).length || 0);
+
+      console.log(
+        `Generating report with ${answeredQuestionCount} answered follow-up questions`,
+      );
+
+      // Create the system prompt
+      const systemPrompt = `You are an AI Readiness Report Generator. Your task is to analyze the results from three specialized AI agents and create a comprehensive AI readiness report.
+
+The report should include:
+1. An overall AI readiness score (0-100)
+2. A readiness level classification
+3. A brief description of what the score means
+4. Scores for four key pillars: Technology Readiness, Leadership Alignment, Actionable Strategy, and Systems Integration
+5. Actionable recommendations based on the insights from all three agents
+
+${
+  hasAnsweredFollowUps
+    ? `
+Include a section titled "INSIGHTS FROM FOLLOW-UP QUESTIONS" that explicitly mentions each follow-up question that was answered and how the answer influenced your recommendations.
+${answeredQuestionCount > 1 ? `IMPORTANT: Multiple follow-up questions (${answeredQuestionCount}) were answered. Make sure to address ALL of them in your analysis, not just the last one.` : ""}
+`
+    : ""
+}
+
+Format your response as a JSON object with the following structure:
+{
+  "overallScore": number, // 0-100
+  "readinessLevel": string, // "Beginner", "Developing", "Established", "Advanced", or "Leading"
+  "description": string, // Brief explanation of what the score means
+  "pillars": {
+    "technologyReadiness": number, // 0-25
+    "leadershipAlignment": number, // 0-25
+    "actionableStrategy": number, // 0-25
+    "systemsIntegration": number // 0-25
+  },
+  "recommendations": string // Markdown-formatted recommendations
+}
+
+The sum of the four pillar scores should equal the overall score.`;
+
+      // Create the user prompt
+      const userPrompt = `Please generate an AI readiness report based on the following assessment data and agent insights:
+
+ASSESSMENT DATA:
+${JSON.stringify(data, null, 2)}
+
+DATA ANALYST INSIGHTS:
+${agentResults.dataAnalyst.insights}
+Score: ${agentResults.dataAnalyst.score}/100
+Recommendations: ${agentResults.dataAnalyst.recommendations.join(", ")}
+
+STRATEGY ADVISOR INSIGHTS:
+${agentResults.strategyAdvisor.insights}
+Score: ${agentResults.strategyAdvisor.score}/100
+Recommendations: ${agentResults.strategyAdvisor.recommendations.join(", ")}
+
+TECHNICAL CONSULTANT INSIGHTS:
+${agentResults.technicalConsultant.insights}
+Score: ${agentResults.technicalConsultant.score}/100
+Recommendations: ${agentResults.technicalConsultant.recommendations.join(", ")}
+
+${
+  hasAnsweredFollowUps
+    ? `
+FOLLOW-UP QUESTIONS AND ANSWERS:
+${this.formatFollowUpQuestionsAndAnswers(agentResults)}
+`
+    : ""
+}
+
+${
+  answeredQuestionCount > 1
+    ? `IMPORTANT: ${answeredQuestionCount} follow-up questions were answered. Please incorporate ALL of these answers into your analysis and recommendations, not just the last one.`
+    : ""
+}
+
+Please provide a comprehensive AI readiness report with an overall score, readiness level, description, pillar scores, and actionable recommendations.`;
+
+      // Call the OpenAI API
+      const response = await this.generateResponse(systemPrompt, userPrompt);
+
+      // Parse the response
+      try {
+        // Extract JSON from the response
+        const jsonText = this.extractJsonFromResponse(response);
+        const parsedResponse = JSON.parse(jsonText) as ReportResult;
+        return parsedResponse;
+      } catch (error) {
+        console.error("Error parsing JSON response:", error);
+        console.error("Raw response:", response);
+        throw new Error("Failed to parse the report generator response");
+      }
     } catch (error) {
-      console.error("Failed to parse Report Generator response:", error);
-      console.error("Raw response:", responseText);
-      console.error("Extracted JSON:", jsonText);
-      return {
-        overallScore: 0,
-        readinessLevel: "Error",
-        description: "Error generating AI readiness report",
-        pillars: {
-          technologyReadiness: 0,
-          leadershipAlignment: 0,
-          actionableStrategy: 0,
-          systemsIntegration: 0,
-        },
-        recommendations: "Unable to generate recommendations due to an error",
-      };
+      console.error("Error in report generation:", error);
+      throw error;
     }
+  }
+
+  private formatFollowUpQuestionsAndAnswers(agentResults: {
+    dataAnalyst: AgentResult;
+    strategyAdvisor: AgentResult;
+    technicalConsultant: AgentResult;
+  }): string {
+    const formattedQuestions: string[] = [];
+
+    // Data Analyst follow-up questions
+    if (agentResults.dataAnalyst.followUpQuestions) {
+      agentResults.dataAnalyst.followUpQuestions
+        .filter((q) => q.answered && q.answer)
+        .forEach((q) => {
+          formattedQuestions.push(
+            `Data Analyst Question: ${q.question}\nContext: ${q.context}\nAnswer: ${q.answer}`,
+          );
+        });
+    }
+
+    // Strategy Advisor follow-up questions
+    if (agentResults.strategyAdvisor.followUpQuestions) {
+      agentResults.strategyAdvisor.followUpQuestions
+        .filter((q) => q.answered && q.answer)
+        .forEach((q) => {
+          formattedQuestions.push(
+            `Strategy Advisor Question: ${q.question}\nContext: ${q.context}\nAnswer: ${q.answer}`,
+          );
+        });
+    }
+
+    // Technical Consultant follow-up questions
+    if (agentResults.technicalConsultant.followUpQuestions) {
+      agentResults.technicalConsultant.followUpQuestions
+        .filter((q) => q.answered && q.answer)
+        .forEach((q) => {
+          formattedQuestions.push(
+            `Technical Consultant Question: ${q.question}\nContext: ${q.context}\nAnswer: ${q.answer}`,
+          );
+        });
+    }
+
+    return formattedQuestions.join("\n\n");
   }
 
   // This method is required by the BaseAgent abstract class but not used directly

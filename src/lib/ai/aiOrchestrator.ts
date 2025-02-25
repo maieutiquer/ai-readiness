@@ -28,6 +28,11 @@ export class AiOrchestrator {
   private strategyAdvisorResult: AgentResult | null = null;
   private technicalConsultantResult: AgentResult | null = null;
 
+  // Track if we've already processed a follow-up answer
+  private hasProcessedFollowUp: boolean = false;
+  // Track which questions have been answered
+  private processedQuestionIds: Set<string> = new Set();
+
   constructor() {
     this.dataAnalystAgent = new DataAnalystAgent();
     this.strategyAdvisorAgent = new StrategyAdvisorAgent();
@@ -83,37 +88,105 @@ export class AiOrchestrator {
    * Get all follow-up questions from all agents
    */
   getAllFollowUpQuestions(): FollowUpQuestionWithAgent[] {
+    // If we've already processed a follow-up answer, don't return any more questions
+    if (this.hasProcessedFollowUp) {
+      return [];
+    }
+
     const questions: FollowUpQuestionWithAgent[] = [];
 
     if (this.dataAnalystResult?.followUpQuestions) {
       questions.push(
-        ...this.dataAnalystResult.followUpQuestions.map((q) => ({
-          ...q,
-          agentType: "dataAnalyst" as AgentType,
-        })),
+        ...this.dataAnalystResult.followUpQuestions
+          .filter((q) => !this.processedQuestionIds.has(q.id))
+          .map((q) => ({
+            ...q,
+            agentType: "dataAnalyst" as AgentType,
+          })),
       );
     }
 
     if (this.strategyAdvisorResult?.followUpQuestions) {
       questions.push(
-        ...this.strategyAdvisorResult.followUpQuestions.map((q) => ({
-          ...q,
-          agentType: "strategyAdvisor" as AgentType,
-        })),
+        ...this.strategyAdvisorResult.followUpQuestions
+          .filter((q) => !this.processedQuestionIds.has(q.id))
+          .map((q) => ({
+            ...q,
+            agentType: "strategyAdvisor" as AgentType,
+          })),
       );
     }
 
     if (this.technicalConsultantResult?.followUpQuestions) {
       questions.push(
-        ...this.technicalConsultantResult.followUpQuestions.map((q) => ({
-          ...q,
-          agentType: "technicalConsultant" as AgentType,
-        })),
+        ...this.technicalConsultantResult.followUpQuestions
+          .filter((q) => !this.processedQuestionIds.has(q.id))
+          .map((q) => ({
+            ...q,
+            agentType: "technicalConsultant" as AgentType,
+          })),
       );
     }
 
-    // Only return questions that haven't been answered yet
-    return questions.filter((q) => !q.answered);
+    // Filter out questions that have been answered
+    const unansweredQuestions = questions.filter((q) => !q.answered);
+
+    // Filter out duplicate or similar questions
+    const uniqueQuestions: FollowUpQuestionWithAgent[] = [];
+    const questionTexts = new Set<string>();
+
+    for (const question of unansweredQuestions) {
+      // Normalize the question text for comparison (lowercase, remove punctuation)
+      const normalizedText = question.question
+        .toLowerCase()
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // Check if we already have a similar question
+      let isDuplicate = false;
+
+      for (const existingText of questionTexts) {
+        // Calculate similarity (simple check for now - if one contains the other)
+        if (
+          normalizedText.includes(existingText) ||
+          existingText.includes(normalizedText) ||
+          // Check for high word overlap
+          this.calculateWordOverlap(normalizedText, existingText) > 0.7
+        ) {
+          isDuplicate = true;
+          break;
+        }
+      }
+
+      if (!isDuplicate) {
+        questionTexts.add(normalizedText);
+        uniqueQuestions.push(question);
+      }
+    }
+
+    return uniqueQuestions;
+  }
+
+  /**
+   * Calculate word overlap between two strings
+   * Returns a value between 0 and 1, where 1 means all words are shared
+   */
+  private calculateWordOverlap(text1: string, text2: string): number {
+    const words1 = new Set(text1.split(" "));
+    const words2 = new Set(text2.split(" "));
+
+    // Count shared words
+    let sharedCount = 0;
+    for (const word of words1) {
+      if (words2.has(word)) {
+        sharedCount++;
+      }
+    }
+
+    // Calculate overlap ratio
+    const totalUniqueWords = new Set([...words1, ...words2]).size;
+    return totalUniqueWords > 0 ? sharedCount / totalUniqueWords : 0;
   }
 
   /**
@@ -126,11 +199,44 @@ export class AiOrchestrator {
   ): Promise<ReportResult> {
     // Find which agent the question belongs to
     const allQuestions = this.getAllFollowUpQuestions();
-    const question = allQuestions.find((q) => q.id === questionId);
+    let question = allQuestions.find((q) => q.id === questionId);
 
+    // If question not found in current questions, try to determine the agent type from the ID
     if (!question) {
-      console.error(`Question with ID ${questionId} not found`);
-      throw new Error(`Question with ID ${questionId} not found`);
+      console.log(
+        `Question with ID ${questionId} not found in current questions, trying to determine agent type from ID`,
+      );
+
+      let agentType: AgentType | null = null;
+
+      // Try to determine agent type from question ID
+      if (questionId.startsWith("data-analyst")) {
+        agentType = "dataAnalyst";
+      } else if (questionId.startsWith("strategy-advisor")) {
+        agentType = "strategyAdvisor";
+      } else if (questionId.startsWith("technical-consultant")) {
+        agentType = "technicalConsultant";
+      }
+
+      if (agentType) {
+        // Create a placeholder question
+        question = {
+          id: questionId,
+          question: "Unknown question",
+          context:
+            "This question was not found in the current list of questions",
+          answered: false,
+          answer: "",
+          agentType: agentType,
+        };
+      } else {
+        console.error(
+          `Could not determine agent type for question ID ${questionId}`,
+        );
+        throw new Error(
+          `Could not determine agent type for question ID ${questionId}`,
+        );
+      }
     }
 
     // Process the answer with the appropriate agent
@@ -175,6 +281,11 @@ export class AiOrchestrator {
       } else {
         throw new Error(`Unknown agent type: ${String(question.agentType)}`);
       }
+
+      // Mark that we've processed a follow-up answer
+      this.hasProcessedFollowUp = true;
+      // Track this specific question as processed
+      this.processedQuestionIds.add(questionId);
 
       // Generate an updated report with the new agent results
       const updatedReport = await this.reportGeneratorAgent.generateReport(

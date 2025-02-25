@@ -17,6 +17,12 @@ const followUpAnswerSchema = z.object({
   answer: z.string(),
 });
 
+// Schema for multiple follow-up question answers
+const multipleFollowUpAnswersSchema = z.object({
+  formData: assessmentInputSchema,
+  answers: z.record(z.string(), z.string()),
+});
+
 export const assessmentRouter = createTRPCRouter({
   create: publicProcedure
     .input(assessmentInputSchema)
@@ -116,23 +122,73 @@ ${report.recommendations}
     }),
 
   answerFollowUp: publicProcedure
-    .input(followUpAnswerSchema)
+    .input(z.union([followUpAnswerSchema, multipleFollowUpAnswersSchema]))
     .mutation(async ({ input }) => {
       try {
-        console.log("Processing follow-up question answer");
+        console.log("Processing follow-up question answer(s)");
 
         // Initialize the AI orchestrator
         const aiOrchestrator = new AiOrchestrator();
 
         // Generate the AI readiness report first to populate the agent results
-        await aiOrchestrator.generateAiReadinessReport(input.formData);
-
-        // Process the follow-up question answer
-        const updatedReport = await aiOrchestrator.processFollowUpAnswer(
+        const initialReport = await aiOrchestrator.generateAiReadinessReport(
           input.formData,
-          input.questionId,
-          input.answer,
         );
+
+        let updatedReport = initialReport; // Default to initial report if no answers processed
+        let processedAnswers = 0;
+        const errors: string[] = [];
+
+        // Check if we're processing a single answer or multiple answers
+        if ("answers" in input) {
+          // Process multiple answers
+          const answerCount = Object.keys(input.answers).length;
+          console.log(`Processing ${answerCount} follow-up answers`);
+
+          // Process each answer sequentially
+          for (const [questionId, answer] of Object.entries(input.answers)) {
+            try {
+              updatedReport = await aiOrchestrator.processFollowUpAnswer(
+                input.formData,
+                questionId,
+                answer,
+              );
+              processedAnswers++;
+            } catch (error) {
+              console.error(
+                `Error processing answer for question ${questionId}:`,
+                error,
+              );
+              errors.push(
+                `Failed to process answer for question ${questionId}: ${error instanceof Error ? error.message : String(error)}`,
+              );
+              // Continue with other answers even if one fails
+            }
+          }
+
+          // If no answers were processed successfully, throw an error
+          if (processedAnswers === 0) {
+            throw new Error(
+              `Failed to process any answers. Errors: ${errors.join("; ")}`,
+            );
+          }
+
+          // Log warning if some answers failed
+          if (errors.length > 0) {
+            console.warn(
+              `Processed ${processedAnswers}/${answerCount} answers. Some answers failed:`,
+              errors,
+            );
+          }
+        } else {
+          // Process a single answer (backward compatibility)
+          updatedReport = await aiOrchestrator.processFollowUpAnswer(
+            input.formData,
+            input.questionId,
+            input.answer,
+          );
+          processedAnswers = 1;
+        }
 
         // Format the recommendations as a string
         const formattedRecommendations = `

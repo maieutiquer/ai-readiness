@@ -68,6 +68,9 @@ export function AssessmentForm() {
   const [followUpAnswers, setFollowUpAnswers] = useState<
     Record<string, string>
   >({});
+  const [answeredQuestions, setAnsweredQuestions] = useState<
+    Record<string, { answer: string; question: string; context?: string }>
+  >({});
   const [showOptionalFields, setShowOptionalFields] = useState<boolean>(false);
   const initialSubmitRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +78,7 @@ export function AssessmentForm() {
   const resetState = () => {
     setFollowUpQuestions([]);
     setFollowUpAnswers({});
+    setAnsweredQuestions({});
   };
 
   const { mutate, error, isPending } = api.assessment.create.useMutation({
@@ -167,10 +171,32 @@ export function AssessmentForm() {
           setFollowUpQuestions([]);
         }
 
-        // Clear the answers
+        // Save all answered questions
+        const updatedAnsweredQuestions = { ...answeredQuestions };
+
+        // Process all the answers that were submitted
+        Object.keys(followUpAnswers).forEach((questionId) => {
+          const answer = followUpAnswers[questionId];
+          if (answer && answer.trim() !== "") {
+            const questionData = followUpQuestions.find(
+              (q) => q.id === questionId,
+            );
+            if (questionData) {
+              updatedAnsweredQuestions[questionId] = {
+                answer: answer,
+                question: questionData.question,
+                context: questionData.context,
+              };
+            }
+          }
+        });
+
+        setAnsweredQuestions(updatedAnsweredQuestions);
+
+        // Clear the input answers
         setFollowUpAnswers({});
 
-        toast.success("Answer processed successfully!");
+        toast.success("Answers processed successfully!");
 
         setTimeout(() => {
           if (initialSubmitRef.current) {
@@ -180,7 +206,11 @@ export function AssessmentForm() {
       },
       onError: (error) => {
         console.error("Error processing follow-up answer:", error);
-        toast.error("Error processing your answer, please try again.");
+        toast.error("Error processing your answers", {
+          description:
+            error.message || "Please try again with different answers.",
+          duration: 5000,
+        });
       },
     });
 
@@ -204,20 +234,6 @@ export function AssessmentForm() {
       ...prev,
       [questionId]: value,
     }));
-  };
-
-  const handleFollowUpAnswerSubmit = (questionId: string) => {
-    const answer = followUpAnswers[questionId];
-    if (!answer) {
-      toast.error("Please provide an answer before submitting.");
-      return;
-    }
-
-    submitFollowUpAnswer({
-      formData: form.getValues(),
-      questionId,
-      answer,
-    });
   };
 
   return (
@@ -370,32 +386,92 @@ export function AssessmentForm() {
                 ))}
                 <Button
                   onClick={() => {
-                    // Submit all answers at once
-                    const questionId = followUpQuestions[0]?.id;
-                    if (questionId && followUpAnswers[questionId]) {
-                      handleFollowUpAnswerSubmit(questionId);
+                    // Get all answered questions
+                    const validAnswerIds = Object.keys(followUpAnswers).filter(
+                      (id) => followUpAnswers[id]?.trim() !== "",
+                    );
+
+                    if (validAnswerIds.length > 0) {
+                      // Create an object with all answers
+                      const allAnswers = validAnswerIds.reduce(
+                        (acc, questionId) => {
+                          if (followUpAnswers[questionId]) {
+                            acc[questionId] = followUpAnswers[questionId];
+                          }
+                          return acc;
+                        },
+                        {} as Record<string, string>,
+                      );
+
+                      // Submit all answers at once
+                      submitFollowUpAnswer({
+                        formData: form.getValues(),
+                        answers: allAnswers,
+                      });
                     } else {
                       toast.error(
-                        "Please provide an answer before submitting.",
+                        "Please provide at least one answer before submitting.",
                       );
                     }
                   }}
                   disabled={
                     isSubmittingAnswer ||
                     !followUpQuestions.length ||
-                    (followUpQuestions[0]?.id
-                      ? !followUpAnswers[followUpQuestions[0].id]
-                      : true)
+                    Object.keys(followUpAnswers).every(
+                      (id) =>
+                        !followUpAnswers[id] ||
+                        followUpAnswers[id].trim() === "",
+                    )
                   }
                   className="mt-4 w-full"
                 >
-                  {isSubmittingAnswer ? "Processing..." : "Submit Answer"}
+                  {isSubmittingAnswer ? "Processing..." : "Submit Answers"}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       )}
+
+      {/* Show answered questions if there are any */}
+      {Object.keys(answeredQuestions).length > 0 &&
+        followUpQuestions.length === 0 && (
+          <div className="mt-6">
+            <Card className="dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle>Your Answers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(answeredQuestions).map(
+                    ([questionId, { answer, question, context }]) => {
+                      return (
+                        <div
+                          key={questionId}
+                          className="rounded-md border border-blue-200 p-4 dark:border-blue-800"
+                        >
+                          <div className="mb-2 font-medium text-blue-600 dark:text-blue-400">
+                            {question}
+                          </div>
+                          <div className="text-muted-foreground text-sm">
+                            <span className="font-medium">Your answer:</span>{" "}
+                            {answer}
+                          </div>
+                          {context && (
+                            <div className="text-muted-foreground text-sm">
+                              <span className="font-medium">Context:</span>{" "}
+                              {context}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    },
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
       {readinessScore && (
         <div>
