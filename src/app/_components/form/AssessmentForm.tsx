@@ -36,6 +36,7 @@ export function AssessmentForm() {
       dataAvailability: [],
       mainBusinessChallenge: [],
       priorityArea: [],
+      previousAiExperience: false,
       ...(process.env.NODE_ENV === "development"
         ? {
             companySize: COMPANY_SIZES[0],
@@ -44,7 +45,6 @@ export function AssessmentForm() {
             budgetRange: BUDGETS[0],
             timelineExpectations: TIMELINES[0],
             technicalExpertiseLevel: TECHNICAL_EXPERTISE_LEVELS[0],
-            previousAiExperience: false,
           }
         : {}),
     },
