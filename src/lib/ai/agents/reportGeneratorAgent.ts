@@ -25,8 +25,8 @@ export class ReportGeneratorAgent extends BaseAgent {
     data: FormValues,
     agentResults: AgentResults,
   ): Promise<ReportResult> {
-    const systemPrompt = `You are an expert Report Generator specializing in AI readiness assessments.
-    Your task is to compile the findings from multiple AI agents into a comprehensive, structured report.
+    const systemPrompt = `You are an expert Report Generator specializing in AI readiness assessments and AI adoption strategy.
+    Your task is to compile the findings from multiple AI agents into a comprehensive, structured report for AI adoption strategy based on assessment results.
     
     Based on the overall score, determine the readiness level:
     - 0-20: "Early Stage" - Limited AI readiness with significant gaps

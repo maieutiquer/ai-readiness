@@ -47,12 +47,8 @@ export const assessmentRouter = createTRPCRouter({
 
         // Format the recommendations as a string
         const formattedRecommendations = `
-# AI Readiness Assessment Report
+# AI adoption strategy based on assessment results
 
-## Overall Score: ${report.overallScore}/100
-**Readiness Level: ${report.readinessLevel}**
-
-${report.description}
 
 ## Pillar Scores
 - Technology Readiness: ${report.pillars.technologyReadiness}/25
