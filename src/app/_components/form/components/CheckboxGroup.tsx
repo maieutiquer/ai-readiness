@@ -52,7 +52,7 @@ export function CheckboxGroup<TFieldName extends ArrayFields<FormValues>>({
                 return (
                   <FormItem
                     key={option}
-                    className="flex flex-row items-start space-x-3 space-y-0"
+                    className="flex flex-row items-start space-y-0 space-x-3"
                   >
                     <FormControl>
                       <Checkbox
