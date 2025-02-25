@@ -58,6 +58,13 @@ vi.mock("~/trpc/react", () => {
             isPending: false,
           }),
         },
+        answerFollowUp: {
+          useMutation: () => ({
+            mutate: mockMutate,
+            error: null,
+            isPending: false,
+          }),
+        },
       },
     },
   };

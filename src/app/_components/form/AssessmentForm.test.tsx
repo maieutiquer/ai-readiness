@@ -2,55 +2,29 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "~/test/test-utils";
 import { AssessmentForm } from "./AssessmentForm";
 
-// Mock the API
-vi.mock("~/trpc/react", () => {
-  const mockMutate = vi.fn().mockImplementation(() => {
-    return Promise.resolve({
-      data: {
-        recommendations: "Mock AI recommendations for testing",
-      },
-    });
-  });
-
-  return {
-    api: {
-      assessment: {
-        create: {
-          useMutation: () => ({
-            mutate: mockMutate,
-            error: null,
-            isPending: false,
-          }),
-        },
-      },
-    },
-  };
-});
-
-// Mock the toast
-vi.mock("sonner", () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    dismiss: vi.fn(),
-  },
-}));
+// Remove the duplicate mocks since they're already defined in test-utils.tsx
+// The mocks in test-utils.tsx will be used instead
 
 describe("AssessmentForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders the form with all fields", () => {
-    render(<AssessmentForm />);
+  it("renders the form with all fields", async () => {
+    const { user } = render(<AssessmentForm />);
 
-    // Check if all form sections are rendered
+    // Check if required form sections are rendered
     expect(screen.getByText("Company size")).toBeInTheDocument();
     expect(screen.getByText("Industry")).toBeInTheDocument();
     expect(
       screen.getByText("Current tech stack maturity (1-5)"),
     ).toBeInTheDocument();
     expect(screen.getByText("Data availability")).toBeInTheDocument();
+
+    // Click the "Show optional fields" button to reveal optional fields
+    await user.click(screen.getByText("Show optional fields"));
+
+    // Now check for optional fields
     expect(screen.getByText("Budget range")).toBeInTheDocument();
     expect(screen.getByText("Timeline expectations")).toBeInTheDocument();
     expect(
