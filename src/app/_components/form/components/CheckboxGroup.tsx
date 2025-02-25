@@ -11,25 +11,25 @@ import {
 import { Checkbox } from "~/components/ui/checkbox";
 import type { FormValues } from "../formDefinitions";
 
-// Type utility to extract array field names from FormValues
-type ArrayFields<T> = {
-  [K in keyof T]: T[K] extends readonly unknown[] ? K : never;
-}[keyof T];
+// Type for array field names in FormValues
+type FormArrayField = Extract<
+  keyof FormValues,
+  "dataAvailability" | "mainBusinessChallenge" | "priorityArea"
+>;
 
-interface CheckboxGroupProps<TFieldName extends ArrayFields<FormValues>> {
+interface CheckboxGroupProps {
   control: Control<FormValues>;
-  name: TFieldName;
+  name: FormArrayField;
   label: string;
-  // The options should be compatible with the array element type
   options: readonly string[];
 }
 
-export function CheckboxGroup<TFieldName extends ArrayFields<FormValues>>({
+export function CheckboxGroup({
   control,
   name,
   label,
   options,
-}: CheckboxGroupProps<TFieldName>) {
+}: CheckboxGroupProps) {
   return (
     <FormField
       control={control}
@@ -63,13 +63,8 @@ export function CheckboxGroup<TFieldName extends ArrayFields<FormValues>>({
                             ? field.value
                             : [];
 
-                          // Use type assertion to unknown first, then to the array type
-                          // This avoids the direct use of 'any'
-                          const typedOption =
-                            option as unknown as FormValues[TFieldName][number];
-
                           return checked
-                            ? field.onChange([...currentValue, typedOption])
+                            ? field.onChange([...currentValue, option])
                             : field.onChange(
                                 currentValue.filter(
                                   (value) => value !== option,
