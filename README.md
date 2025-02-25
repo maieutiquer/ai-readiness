@@ -1,38 +1,71 @@
-# Create T3 App
+# AI Readiness Assessment Tool
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This application helps organizations assess their readiness for AI adoption through a comprehensive assessment framework powered by specialized AI agents.
 
-This app is deployed to Vercel:
+## Features
 
-[https://ai-readiness-mu.vercel.app/](https://ai-readiness-mu.vercel.app/)
+- **Multi-agent AI System**: Utilizes specialized AI agents to analyze different aspects of AI readiness
+- **Comprehensive Assessment**: Evaluates readiness across four key pillars:
+  - Technology Readiness
+  - Leadership Alignment
+  - Actionable Strategy
+  - Systems Integration
+- **Detailed Recommendations**: Provides tailored recommendations based on assessment responses
 
-## Getting started
+## AI Agent Architecture
 
-To run this app locally, you need to have Node.js ^22, then run
+The application uses a multi-agent system built with LangChain.js:
 
-- `corepack enable` - optional, only if you don't have corepack enabled, nor pnpm installed
-- `pnpm install`
-- `pnpm run dev`
+1. **Data Analyst Agent**: Assesses company responses and identifies data-related gaps
+2. **Strategy Advisor Agent**: Generates AI adoption strategies based on readiness score
+3. **Technical Consultant Agent**: Recommends tools and technologies for AI integration
+4. **Report Generator Agent**: Compiles findings into a structured report
 
-## What's T3?
+## Getting Started
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### Prerequisites
 
-- [Next.js](https://nextjs.org)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- Node.js 18+
+- pnpm 10+
 
-## Learn More
+### Installation
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/ai-readiness.git
+cd ai-readiness
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available)
+# Install dependencies
+pnpm install
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app)
+# Set up environment variables
+cp .env.example .env
+# Add your OpenAI API key to the .env file
+```
 
-## How do I deploy this?
+### Development
 
-Follow the deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+```bash
+# Start the development server
+pnpm dev
+```
+
+### Production
+
+```bash
+# Build for production
+pnpm build
+
+# Start the production server
+pnpm start
+```
+
+## Technology Stack
+
+- **Frontend**: Next.js, React, Tailwind CSS, shadcn/ui
+- **Backend**: tRPC, Prisma
+- **AI**: LangChain.js, OpenAI API
+
+## License
+
+MIT

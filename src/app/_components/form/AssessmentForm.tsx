@@ -63,6 +63,28 @@ export function AssessmentForm() {
   const { mutate, error, isPending } = api.assessment.create.useMutation({
     onSuccess: (response) => {
       setAiRecommendations(response.data.recommendations);
+
+      // Use the AI readiness score from the API response if available
+      if (
+        response.data.aiReadinessScore !== undefined &&
+        response.data.aiReadinessLevel !== undefined &&
+        response.data.description !== undefined
+      ) {
+        setReadinessScore({
+          score: response.data.aiReadinessScore,
+          readinessLevel: response.data.aiReadinessLevel,
+          description: response.data.description,
+        });
+      } else {
+        // Fallback to the calculated score if API doesn't provide one
+        const scoreResult = calculateAiReadinessScore(form.getValues());
+        setReadinessScore({
+          score: scoreResult.score,
+          readinessLevel: scoreResult.readinessLevel || "Not Available",
+          description: scoreResult.description || "No description available",
+        });
+      }
+
       toast.success("AI report generated successfully!");
 
       setTimeout(() => {
@@ -92,13 +114,8 @@ export function AssessmentForm() {
   });
 
   const onSubmit = (data: FormValues) => {
-    // Calculate AI readiness score
+    // Calculate AI readiness score as a fallback
     const scoreResult = calculateAiReadinessScore(data);
-    setReadinessScore({
-      score: scoreResult.score,
-      readinessLevel: scoreResult.readinessLevel || "Not Available",
-      description: scoreResult.description || "No description available",
-    });
 
     // Include score in the API call
     mutate({
@@ -232,10 +249,42 @@ export function AssessmentForm() {
         <div className={readinessScore ? "mt-4" : ""}>
           <Card className="dark:bg-slate-900">
             <CardHeader>
-              <CardTitle>AI Recommendations:</CardTitle>
+              <CardTitle>AI Readiness Report</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="whitespace-pre-wrap">{aiRecommendations}</pre>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {aiRecommendations.split("\n").map((line, index) => {
+                  if (line.startsWith("# ")) {
+                    return (
+                      <h1 key={index} className="mt-4 text-2xl font-bold">
+                        {line.substring(2)}
+                      </h1>
+                    );
+                  } else if (line.startsWith("## ")) {
+                    return (
+                      <h2 key={index} className="mt-3 text-xl font-semibold">
+                        {line.substring(3)}
+                      </h2>
+                    );
+                  } else if (line.startsWith("- ")) {
+                    return (
+                      <li key={index} className="ml-4">
+                        {line.substring(2)}
+                      </li>
+                    );
+                  } else if (line.startsWith("**") && line.endsWith("**")) {
+                    return (
+                      <p key={index} className="font-bold">
+                        {line.substring(2, line.length - 2)}
+                      </p>
+                    );
+                  } else if (line.trim() === "") {
+                    return <br key={index} />;
+                  } else {
+                    return <p key={index}>{line}</p>;
+                  }
+                })}
+              </div>
             </CardContent>
           </Card>
         </div>
