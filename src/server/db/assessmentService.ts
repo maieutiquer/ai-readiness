@@ -69,47 +69,86 @@ export class AssessmentService {
     const inputHash = generateAssessmentHash(data);
 
     try {
-      await this.prisma.assessment.create({
-        data: {
-          inputHash,
-          companySize: data.companySize,
-          industry: data.industry,
-          techStackMaturity: data.techStackMaturity,
-          dataAvailability: data.dataAvailability,
-          budgetRange: data.budgetRange,
-          timelineExpectations: data.timelineExpectations,
-          technicalExpertiseLevel: data.technicalExpertiseLevel,
-          previousAiExperience: data.previousAiExperience,
-          mainBusinessChallenge: data.mainBusinessChallenge,
-          priorityArea: data.priorityArea,
-          aiReport: {
-            create: {
-              overallScore: report.overallScore,
-              readinessLevel: report.readinessLevel,
-              description: report.description,
-              technologyReadiness: report.pillars.technologyReadiness,
-              leadershipAlignment: report.pillars.leadershipAlignment,
-              actionableStrategy: report.pillars.actionableStrategy,
-              systemsIntegration: report.pillars.systemsIntegration,
-              dataAnalystInsights: agentResults.dataAnalyst.insights,
-              dataAnalystScore: agentResults.dataAnalyst.score,
-              dataAnalystRecommendations:
-                agentResults.dataAnalyst.recommendations,
-              strategyAdvisorInsights: agentResults.strategyAdvisor.insights,
-              strategyAdvisorScore: agentResults.strategyAdvisor.score,
-              strategyAdvisorRecommendations:
-                agentResults.strategyAdvisor.recommendations,
-              technicalConsultantInsights:
-                agentResults.technicalConsultant.insights,
-              technicalConsultantScore: agentResults.technicalConsultant.score,
-              technicalConsultantRecommendations:
-                agentResults.technicalConsultant.recommendations,
-              recommendations: report.recommendations,
-              formattedReport,
+      // Check if the assessment already exists
+      const existingAssessment = await this.prisma.assessment.findUnique({
+        where: { inputHash },
+        include: { aiReport: true },
+      });
+
+      if (existingAssessment) {
+        // If it exists, update the AI report
+        await this.prisma.aiReport.update({
+          where: { id: existingAssessment.aiReport?.id },
+          data: {
+            overallScore: report.overallScore,
+            readinessLevel: report.readinessLevel,
+            description: report.description,
+            technologyReadiness: report.pillars.technologyReadiness,
+            leadershipAlignment: report.pillars.leadershipAlignment,
+            actionableStrategy: report.pillars.actionableStrategy,
+            systemsIntegration: report.pillars.systemsIntegration,
+            dataAnalystInsights: agentResults.dataAnalyst.insights,
+            dataAnalystScore: agentResults.dataAnalyst.score,
+            dataAnalystRecommendations:
+              agentResults.dataAnalyst.recommendations,
+            strategyAdvisorInsights: agentResults.strategyAdvisor.insights,
+            strategyAdvisorScore: agentResults.strategyAdvisor.score,
+            strategyAdvisorRecommendations:
+              agentResults.strategyAdvisor.recommendations,
+            technicalConsultantInsights:
+              agentResults.technicalConsultant.insights,
+            technicalConsultantScore: agentResults.technicalConsultant.score,
+            technicalConsultantRecommendations:
+              agentResults.technicalConsultant.recommendations,
+            recommendations: report.recommendations,
+            formattedReport,
+          },
+        });
+      } else {
+        // If it doesn't exist, create a new assessment and AI report
+        await this.prisma.assessment.create({
+          data: {
+            inputHash,
+            companySize: data.companySize,
+            industry: data.industry,
+            techStackMaturity: data.techStackMaturity,
+            dataAvailability: data.dataAvailability,
+            budgetRange: data.budgetRange || "",
+            timelineExpectations: data.timelineExpectations || "",
+            technicalExpertiseLevel: data.technicalExpertiseLevel || "",
+            previousAiExperience: data.previousAiExperience || false,
+            mainBusinessChallenge: data.mainBusinessChallenge || [],
+            priorityArea: data.priorityArea || [],
+            aiReport: {
+              create: {
+                overallScore: report.overallScore,
+                readinessLevel: report.readinessLevel,
+                description: report.description,
+                technologyReadiness: report.pillars.technologyReadiness,
+                leadershipAlignment: report.pillars.leadershipAlignment,
+                actionableStrategy: report.pillars.actionableStrategy,
+                systemsIntegration: report.pillars.systemsIntegration,
+                dataAnalystInsights: agentResults.dataAnalyst.insights,
+                dataAnalystScore: agentResults.dataAnalyst.score,
+                dataAnalystRecommendations:
+                  agentResults.dataAnalyst.recommendations,
+                strategyAdvisorInsights: agentResults.strategyAdvisor.insights,
+                strategyAdvisorScore: agentResults.strategyAdvisor.score,
+                strategyAdvisorRecommendations:
+                  agentResults.strategyAdvisor.recommendations,
+                technicalConsultantInsights:
+                  agentResults.technicalConsultant.insights,
+                technicalConsultantScore:
+                  agentResults.technicalConsultant.score,
+                technicalConsultantRecommendations:
+                  agentResults.technicalConsultant.recommendations,
+                recommendations: report.recommendations,
+                formattedReport,
+              },
             },
           },
-        },
-      });
+        });
+      }
     } catch (error) {
       console.error("Error saving assessment:", error);
       throw error; // Re-throw to handle in the caller

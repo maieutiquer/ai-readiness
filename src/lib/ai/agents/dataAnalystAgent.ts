@@ -9,12 +9,22 @@ export class DataAnalystAgent extends BaseAgent {
     
     Provide a score from 0-25 for the Technology Readiness pillar based on their responses.
     
+    IMPORTANT: If you need more information to provide a better assessment, include at most 1 follow-up question.
+    
     Format your response as a JSON object with the following structure:
     {
       "insights": "A detailed analysis of the company's data readiness",
       "score": 0-25,
-      "recommendations": ["recommendation1", "recommendation2", "recommendation3"]
+      "recommendations": ["recommendation1", "recommendation2", "recommendation3"],
+      "followUpQuestions": [
+        {
+          "question": "Your specific follow-up question here?",
+          "context": "Why you're asking this question and how it will help your assessment"
+        }
+      ]
     }
+    
+    Only include the followUpQuestions field if you have a specific question that would help you provide a better assessment.
     
     IMPORTANT: Return ONLY the JSON object without any markdown formatting, code blocks, or additional text.`;
 
@@ -25,7 +35,28 @@ export class DataAnalystAgent extends BaseAgent {
     const jsonText = this.extractJsonFromResponse(responseText);
 
     try {
-      return JSON.parse(jsonText) as AgentResult;
+      const result = JSON.parse(jsonText) as AgentResult;
+
+      // Add stable IDs to any follow-up questions
+      if (result.followUpQuestions && result.followUpQuestions.length > 0) {
+        // Generate a stable ID for each question based on content hash
+        result.followUpQuestions = result.followUpQuestions.map((q, index) => {
+          // Create a stable ID that won't change between requests
+          const uniqueId = `data-analyst-q${index}`;
+          return {
+            ...q,
+            id: uniqueId,
+            answered: false,
+          };
+        });
+
+        // Limit to just one question to simplify
+        if (result.followUpQuestions.length > 1) {
+          result.followUpQuestions = result.followUpQuestions.slice(0, 1);
+        }
+      }
+
+      return result;
     } catch (error) {
       console.error("Failed to parse Data Analyst response:", error);
       console.error("Raw response:", responseText);
@@ -36,5 +67,23 @@ export class DataAnalystAgent extends BaseAgent {
         recommendations: ["Unable to analyze data readiness due to an error"],
       };
     }
+  }
+
+  protected getFollowUpSystemPrompt(): string {
+    return `You are an expert Data Analyst specializing in AI readiness assessments.
+    You've received an answer to a follow-up question you asked about the company's data readiness.
+    
+    Update your analysis based on this new information.
+    
+    Provide an updated score from 0-25 for the Technology Readiness pillar based on all information available.
+    
+    Format your response as a JSON object with the following structure:
+    {
+      "insights": "A detailed analysis of the company's data readiness, incorporating the new information",
+      "score": 0-25,
+      "recommendations": ["recommendation1", "recommendation2", "recommendation3"]
+    }
+    
+    IMPORTANT: Return ONLY the JSON object without any markdown formatting, code blocks, or additional text.`;
   }
 }

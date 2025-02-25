@@ -88,16 +88,22 @@ export const PRIORITY_AREAS = [
 // =========================================================
 
 export const formSchema = z.object({
+  // Required fields (core information needed for assessment)
   companySize: z.enum(COMPANY_SIZES),
   industry: z.enum(INDUSTRIES),
   techStackMaturity: z.enum(TECH_STACK_MATURITY_LEVELS),
   dataAvailability: z.array(z.enum(DATA_AVAILABILITY_OPTIONS)),
-  budgetRange: z.enum(BUDGETS),
-  timelineExpectations: z.enum(TIMELINES),
-  technicalExpertiseLevel: z.enum(TECHNICAL_EXPERTISE_LEVELS),
-  previousAiExperience: z.boolean(),
-  mainBusinessChallenge: z.array(z.enum(MAIN_BUSINESS_CHALLENGES)),
-  priorityArea: z.array(z.enum(PRIORITY_AREAS)),
+
+  // Optional fields (helpful but not critical)
+  budgetRange: z.enum(BUDGETS).optional(),
+  timelineExpectations: z.enum(TIMELINES).optional(),
+  technicalExpertiseLevel: z.enum(TECHNICAL_EXPERTISE_LEVELS).optional(),
+  previousAiExperience: z.boolean().optional().default(false),
+  mainBusinessChallenge: z
+    .array(z.enum(MAIN_BUSINESS_CHALLENGES))
+    .optional()
+    .default([]),
+  priorityArea: z.array(z.enum(PRIORITY_AREAS)).optional().default([]),
 });
 
 export type FormValues = z.infer<typeof formSchema>;

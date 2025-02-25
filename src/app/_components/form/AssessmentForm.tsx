@@ -28,6 +28,9 @@ import {
 } from "./formDefinitions";
 import { calculateAiReadinessScore } from "./scoring";
 import { Progress } from "~/components/ui/progress";
+import { Input } from "~/components/ui/input";
+import type { FollowUpQuestionWithAgent } from "~/lib/ai/aiOrchestrator";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function AssessmentForm() {
   const form = useForm<FormValues>({
@@ -59,7 +62,20 @@ export function AssessmentForm() {
     description: string;
   } | null>(null);
   const [isCached, setIsCached] = useState<boolean>(false);
-  const recommendationsRef = useRef<HTMLDivElement>(null);
+  const [followUpQuestions, setFollowUpQuestions] = useState<
+    FollowUpQuestionWithAgent[]
+  >([]);
+  const [followUpAnswers, setFollowUpAnswers] = useState<
+    Record<string, string>
+  >({});
+  const [showOptionalFields, setShowOptionalFields] = useState<boolean>(false);
+  const initialSubmitRef = useRef<HTMLDivElement>(null);
+
+  // Reset state when form is submitted
+  const resetState = () => {
+    setFollowUpQuestions([]);
+    setFollowUpAnswers({});
+  };
 
   const { mutate, error, isPending } = api.assessment.create.useMutation({
     onSuccess: (response) => {
@@ -87,6 +103,13 @@ export function AssessmentForm() {
         });
       }
 
+      // Store any follow-up questions
+      if (response.data.followUpQuestions) {
+        setFollowUpQuestions(response.data.followUpQuestions);
+      } else {
+        setFollowUpQuestions([]);
+      }
+
       toast.success(
         response.data.cached
           ? "AI report retrieved from cache"
@@ -94,8 +117,8 @@ export function AssessmentForm() {
       );
 
       setTimeout(() => {
-        if (recommendationsRef.current) {
-          recommendationsRef.current.scrollIntoView({ behavior: "smooth" });
+        if (initialSubmitRef.current) {
+          initialSubmitRef.current.scrollIntoView({ behavior: "smooth" });
         }
       }, 150);
     },
@@ -119,7 +142,52 @@ export function AssessmentForm() {
     },
   });
 
+  // Add a new mutation for handling follow-up question answers
+  const { mutate: submitFollowUpAnswer, isPending: isSubmittingAnswer } =
+    api.assessment.answerFollowUp.useMutation({
+      onSuccess: (response) => {
+        setAiRecommendations(response.data.recommendations);
+
+        if (
+          response.data.aiReadinessScore !== undefined &&
+          response.data.aiReadinessLevel !== undefined &&
+          response.data.description !== undefined
+        ) {
+          setReadinessScore({
+            score: response.data.aiReadinessScore,
+            readinessLevel: response.data.aiReadinessLevel,
+            description: response.data.description,
+          });
+        }
+
+        // Update follow-up questions
+        if (response.data.followUpQuestions) {
+          setFollowUpQuestions(response.data.followUpQuestions);
+        } else {
+          setFollowUpQuestions([]);
+        }
+
+        // Clear the answers
+        setFollowUpAnswers({});
+
+        toast.success("Answer processed successfully!");
+
+        setTimeout(() => {
+          if (initialSubmitRef.current) {
+            initialSubmitRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 150);
+      },
+      onError: (error) => {
+        console.error("Error processing follow-up answer:", error);
+        toast.error("Error processing your answer, please try again.");
+      },
+    });
+
   const onSubmit = (data: FormValues) => {
+    // Reset state
+    resetState();
+
     // Calculate AI readiness score as a fallback
     const scoreResult = calculateAiReadinessScore(data);
 
@@ -131,10 +199,32 @@ export function AssessmentForm() {
     });
   };
 
+  const handleFollowUpAnswerChange = (questionId: string, value: string) => {
+    setFollowUpAnswers((prev) => ({
+      ...prev,
+      [questionId]: value,
+    }));
+  };
+
+  const handleFollowUpAnswerSubmit = (questionId: string) => {
+    const answer = followUpAnswers[questionId];
+    if (!answer) {
+      toast.error("Please provide an answer before submitting.");
+      return;
+    }
+
+    submitFollowUpAnswer({
+      formData: form.getValues(),
+      questionId,
+      answer,
+    });
+  };
+
   return (
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Required fields */}
           <SelectField
             control={form.control}
             name="companySize"
@@ -165,50 +255,76 @@ export function AssessmentForm() {
             options={DATA_AVAILABILITY_OPTIONS}
           />
 
-          <SelectField
-            control={form.control}
-            name="budgetRange"
-            label="Budget range"
-            placeholder="Select budget"
-            options={BUDGETS}
-          />
+          {/* Optional fields toggle */}
+          <div className="flex items-center justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowOptionalFields(!showOptionalFields)}
+              className="flex w-full justify-between"
+            >
+              <span>
+                {showOptionalFields
+                  ? "Hide optional fields"
+                  : "Show optional fields"}
+              </span>
+              {showOptionalFields ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
 
-          <SelectField
-            control={form.control}
-            name="timelineExpectations"
-            label="Timeline expectations"
-            placeholder="Select timeline"
-            options={TIMELINES}
-          />
+          {/* Optional fields */}
+          {showOptionalFields && (
+            <div className="space-y-6 rounded-md border p-4">
+              <SelectField
+                control={form.control}
+                name="budgetRange"
+                label="Budget range"
+                placeholder="Select budget"
+                options={BUDGETS}
+              />
 
-          <RadioGroupField
-            control={form.control}
-            name="technicalExpertiseLevel"
-            label="Technical expertise level (1-5)"
-            options={TECHNICAL_EXPERTISE_LEVELS}
-          />
+              <SelectField
+                control={form.control}
+                name="timelineExpectations"
+                label="Timeline expectations"
+                placeholder="Select timeline"
+                options={TIMELINES}
+              />
 
-          <BooleanRadioGroup
-            control={form.control}
-            name="previousAiExperience"
-            label="Previous AI experience"
-          />
+              <RadioGroupField
+                control={form.control}
+                name="technicalExpertiseLevel"
+                label="Technical expertise level (1-5)"
+                options={TECHNICAL_EXPERTISE_LEVELS}
+              />
 
-          <CheckboxGroup
-            control={form.control}
-            name="mainBusinessChallenge"
-            label="Main business challenge"
-            options={MAIN_BUSINESS_CHALLENGES}
-          />
+              <BooleanRadioGroup
+                control={form.control}
+                name="previousAiExperience"
+                label="Previous AI experience"
+              />
 
-          <CheckboxGroup
-            control={form.control}
-            name="priorityArea"
-            label="Priority area"
-            options={PRIORITY_AREAS}
-          />
+              <CheckboxGroup
+                control={form.control}
+                name="mainBusinessChallenge"
+                label="Main business challenge"
+                options={MAIN_BUSINESS_CHALLENGES}
+              />
 
-          <div className="flex justify-between">
+              <CheckboxGroup
+                control={form.control}
+                name="priorityArea"
+                label="Priority area"
+                options={PRIORITY_AREAS}
+              />
+            </div>
+          )}
+
+          <div ref={initialSubmitRef} className="flex justify-between">
             <Button
               type="submit"
               disabled={isPending}
@@ -226,8 +342,63 @@ export function AssessmentForm() {
         </form>
       </Form>
 
+      {followUpQuestions.length > 0 && (
+        <div className="mt-6">
+          <Card className="dark:bg-slate-900">
+            <CardHeader>
+              <CardTitle>Follow-up Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {followUpQuestions.map((question) => (
+                  <div key={question.id} className="space-y-2">
+                    <div className="flex flex-col space-y-1">
+                      <h3 className="font-medium">{question.question}</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {question.context}
+                      </p>
+                    </div>
+                    <Input
+                      value={followUpAnswers[question.id] || ""}
+                      onChange={(e) =>
+                        handleFollowUpAnswerChange(question.id, e.target.value)
+                      }
+                      placeholder="Your answer..."
+                      className="flex-1"
+                    />
+                  </div>
+                ))}
+                <Button
+                  onClick={() => {
+                    // Submit all answers at once
+                    const questionId = followUpQuestions[0]?.id;
+                    if (questionId && followUpAnswers[questionId]) {
+                      handleFollowUpAnswerSubmit(questionId);
+                    } else {
+                      toast.error(
+                        "Please provide an answer before submitting.",
+                      );
+                    }
+                  }}
+                  disabled={
+                    isSubmittingAnswer ||
+                    !followUpQuestions.length ||
+                    (followUpQuestions[0]?.id
+                      ? !followUpAnswers[followUpQuestions[0].id]
+                      : true)
+                  }
+                  className="mt-4 w-full"
+                >
+                  {isSubmittingAnswer ? "Processing..." : "Submit Answer"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {readinessScore && (
-        <div ref={recommendationsRef}>
+        <div>
           <Card className="mt-6 dark:bg-slate-900">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -272,12 +443,36 @@ export function AssessmentForm() {
                       </h1>
                     );
                   } else if (line.startsWith("## ")) {
+                    if (line.includes("INSIGHTS FROM FOLLOW-UP QUESTIONS")) {
+                      return (
+                        <h2
+                          key={index}
+                          className="mt-3 rounded-md bg-blue-100 p-2 text-xl font-semibold dark:bg-blue-900"
+                        >
+                          {line.substring(3)}
+                        </h2>
+                      );
+                    }
                     return (
                       <h2 key={index} className="mt-3 text-xl font-semibold">
                         {line.substring(3)}
                       </h2>
                     );
                   } else if (line.startsWith("- ")) {
+                    if (
+                      line.toLowerCase().includes("follow-up") ||
+                      line.toLowerCase().includes("you answered") ||
+                      line.toLowerCase().includes("your answer")
+                    ) {
+                      return (
+                        <li
+                          key={index}
+                          className="ml-4 font-medium text-blue-600 dark:text-blue-400"
+                        >
+                          {line.substring(2)}
+                        </li>
+                      );
+                    }
                     return (
                       <li key={index} className="ml-4">
                         {line.substring(2)}
@@ -292,6 +487,20 @@ export function AssessmentForm() {
                   } else if (line.trim() === "") {
                     return <br key={index} />;
                   } else {
+                    if (
+                      line.toLowerCase().includes("follow-up") ||
+                      line.toLowerCase().includes("you answered") ||
+                      line.toLowerCase().includes("your answer")
+                    ) {
+                      return (
+                        <p
+                          key={index}
+                          className="font-medium text-blue-600 dark:text-blue-400"
+                        >
+                          {line}
+                        </p>
+                      );
+                    }
                     return <p key={index}>{line}</p>;
                   }
                 })}

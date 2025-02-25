@@ -35,6 +35,10 @@ export class ReportGeneratorAgent extends BaseAgent {
     - 61-80: "Established" - Strong foundation for AI adoption with minor gaps
     - 81-100: "Leading" - Excellent AI readiness with robust capabilities
     
+    IMPORTANT: If any follow-up questions were answered (check if any question has "answered: true" and an "answer" field),
+    create a special section in your recommendations titled "INSIGHTS FROM FOLLOW-UP QUESTIONS" that explicitly mentions 
+    each follow-up question and how the answer influenced your recommendations.
+    
     Format your response as a JSON object with the following structure:
     {
       "overallScore": 0-100,
@@ -46,10 +50,17 @@ export class ReportGeneratorAgent extends BaseAgent {
         "actionableStrategy": 0-25,
         "systemsIntegration": 0-25
       },
-      "recommendations": "Comprehensive, structured recommendations based on all agent findings"
+      "recommendations": "Comprehensive, structured recommendations based on all agent findings, with a special section for follow-up insights if applicable"
     }
     
     IMPORTANT: Return ONLY the JSON object without any markdown formatting, code blocks, or additional text.`;
+
+    // Check if any follow-up questions were answered
+    const hasAnsweredQuestions = [
+      ...(agentResults.dataAnalyst.followUpQuestions || []),
+      ...(agentResults.strategyAdvisor.followUpQuestions || []),
+      ...(agentResults.technicalConsultant.followUpQuestions || []),
+    ].some((q) => q.answered && q.answer);
 
     const userPrompt = `Please generate a comprehensive AI readiness report based on the following:
     
@@ -63,7 +74,9 @@ export class ReportGeneratorAgent extends BaseAgent {
     ${JSON.stringify(agentResults.strategyAdvisor, null, 2)}
     
     Technical Consultant Findings:
-    ${JSON.stringify(agentResults.technicalConsultant, null, 2)}`;
+    ${JSON.stringify(agentResults.technicalConsultant, null, 2)}
+    
+    ${hasAnsweredQuestions ? "IMPORTANT: Follow-up questions were answered. Please highlight these answers in your report and explain how they influenced your recommendations." : ""}`;
 
     const responseText = await this.generateResponse(systemPrompt, userPrompt);
     const jsonText = this.extractJsonFromResponse(responseText);
