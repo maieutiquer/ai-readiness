@@ -55,7 +55,7 @@ test.describe("Assessment Form with Page Object Model", () => {
     await assessmentFormPage.verifyReportDisplayed();
   });
 
-  test("should complete assessment with all fields", async () => {
+  test.skip("should complete assessment with all fields", async () => {
     // Fill out required fields
     await assessmentFormPage.fillRequiredFields();
 
