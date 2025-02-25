@@ -11,11 +11,14 @@ import {
 import { Checkbox } from "~/components/ui/checkbox";
 import type { FormValues } from "../formDefinitions";
 
+// Type utility to extract array field names from FormValues
+type ArrayFieldsOf<T> = {
+  [K in keyof T]: T[K] extends readonly unknown[] ? K : never;
+}[keyof T] &
+  keyof T;
+
 // Type for array field names in FormValues
-type FormArrayField = Extract<
-  keyof FormValues,
-  "dataAvailability" | "mainBusinessChallenge" | "priorityArea"
->;
+type FormArrayField = ArrayFieldsOf<FormValues>;
 
 interface CheckboxGroupProps {
   control: Control<FormValues>;
