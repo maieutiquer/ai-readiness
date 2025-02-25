@@ -124,17 +124,17 @@ export const READINESS_LEVELS = [
 ];
 
 // Calculate score for array-type fields (checkboxes)
-const calculateArrayFieldScore = (
-  selectedItems: string[],
-  totalPossibleItems: number,
-): number => {
-  if (totalPossibleItems === 0) return 0;
-  // Scale from 1-5 based on percentage of items selected
-  return Math.max(
-    1,
-    Math.min(5, Math.ceil((selectedItems.length / totalPossibleItems) * 5)),
-  );
-};
+// const calculateArrayFieldScore = (
+//   selectedItems: string[],
+//   totalPossibleItems: number,
+// ): number => {
+//   if (totalPossibleItems === 0) return 0;
+//   // Scale from 1-5 based on percentage of items selected
+//   return Math.max(
+//     1,
+//     Math.min(5, Math.ceil((selectedItems.length / totalPossibleItems) * 5)),
+//   );
+// };
 
 // Main scoring function
 import type { FormValues } from "./formDefinitions";
